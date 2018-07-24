@@ -11,77 +11,6 @@
 /// The window for the application.
 static std::unique_ptr<WINDOWING::Win32Window> g_window = nullptr;
 
-void CopyToWindow(const GRAPHICS::RenderTarget& render_target, const WINDOWING::Win32Window& window)
-{
-    // GET THE DEVICE CONTEXT.
-    HDC device_context = GetDC(window.WindowHandle);
-    bool device_context_retrieved = (nullptr != device_context);
-    if (!device_context_retrieved)
-    {
-        // The render target can't be copied without a valid device context.
-        return;
-    }
-
-    int render_target_width = render_target.GetWidthInPixels();
-    int render_target_height = render_target.GetHeightInPixels();
-
-    /// @todo   Bitmap info.
-    // POPULATE THE BITMAP INFO DESCRIBING THE RENDER TARGET.
-    BITMAPINFO bitmap_info = {};
-    bitmap_info.bmiHeader.biSize = sizeof(bitmap_info.bmiHeader);
-    bitmap_info.bmiHeader.biWidth = static_cast<LONG>(render_target_width);
-    // To ensure that the bitmap for the render target has an origin
-    // at the top-left corner, the height needs to be made negative
-    // to ensure the device independent bitmap is top-down.
-    bitmap_info.bmiHeader.biHeight = -1 * static_cast<LONG>(render_target_height);
-    // The number of planes must always be 1.
-    bitmap_info.bmiHeader.biPlanes = 1;
-    // The pixel format is a 32-bit RGB format.
-    bitmap_info.bmiHeader.biBitCount = 32;
-    bitmap_info.bmiHeader.biCompression = BI_RGB;
-    // BI_RGB bitmaps can set the image size to 0.
-    bitmap_info.bmiHeader.biSizeImage = 0;
-    // Meter-based information (used for devices like printing) is not
-    // known or needed.
-    bitmap_info.bmiHeader.biXPelsPerMeter = 0;
-    bitmap_info.bmiHeader.biYPelsPerMeter = 0;
-    // Require all colors be supported by the bitmap.
-    bitmap_info.bmiHeader.biClrUsed = 0;
-    bitmap_info.bmiHeader.biClrImportant = 0;
-
-    // COPY AND SCALE THE RENDER TARGET DATA TO FILL THE ENTIRE CLIENT AREA OF THE WINDOW.
-    RECT client_rectangle = {};
-    GetClientRect(window.WindowHandle, &client_rectangle);
-    const int RENDER_TARGET_LEFT_X_POSITION = 0;
-    const int RENDER_TARGET_TOP_Y_POSITION = 0;
-    const uint32_t* pixel_data = render_target.GetRawData();
-    // The return value is ignored since there isn't much that can be meaningfully done
-    // if copying fails.
-    StretchDIBits(
-        device_context,
-        /// @todo   Perform proper scaling later.  Right now, the pixels
-        /// are rendered to scale to make debugging easier.
-        /*clientRectangle.Left,
-        clientRectangle.Top,
-        clientRectangle.Right,
-        clientRectangle.Bottom,*/
-        0,
-        0,
-        render_target_width,
-        render_target_height,
-        RENDER_TARGET_LEFT_X_POSITION,
-        RENDER_TARGET_TOP_Y_POSITION,
-        render_target_width,
-        render_target_height,
-        pixel_data,
-        &bitmap_info,
-        DIB_RGB_COLORS,
-        SRCCOPY);
-
-    // RELEASE THE DEVICE CONTEXT.
-    ReleaseDC(window.WindowHandle, device_context);
-}
-
 /// The main window callback procedure for processing messages sent to the main application window.
 /// @param[in]  window - Handle to the window.
 /// @param[in]  message - The message.
@@ -203,10 +132,11 @@ int CALLBACK WinMain(
     GRAPHICS::RenderTarget render_target(SCREEN_WIDTH_IN_PIXELS, SCREEN_HEIGHT_IN_PIXELS, GRAPHICS::ColorFormat::ARGB);
 
     // RUN A MESSAGE LOOP.
-    auto start_time = std::chrono::high_resolution_clock::now();
     bool running = true;
     while (running)
     {
+        auto frame_start_time = std::chrono::high_resolution_clock::now();
+
         // PROCESS ANY MESSAGES FOR THE APPLICATION WINDOW.
         MSG message;
         auto message_received = [&]()
@@ -242,19 +172,18 @@ int CALLBACK WinMain(
             DispatchMessage(&message);
         }
 
-#if 1
-        auto current_time = std::chrono::high_resolution_clock::now();
-        float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - start_time).count();
-        std::string total_elapsed_time_string = std::to_string(total_elapsed_time) + "\n";
-        OutputDebugStringA(total_elapsed_time_string.c_str());
-#endif
-
         /// @todo Render to render target.
-        /// @todo Fix colors - they're backwards!
         render_target.FillPixels(GRAPHICS::Color(1.0, 0.0, 0.0, 1.0f));
 
         /// @todo Copy render target to window.
-        CopyToWindow(render_target, *g_window);
+        g_window->Display(render_target);
+
+#if 1
+        auto current_time = std::chrono::high_resolution_clock::now();
+        float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - frame_start_time).count();
+        std::string total_elapsed_time_string = std::to_string(total_elapsed_time) + "\n";
+        OutputDebugStringA(total_elapsed_time_string.c_str());
+#endif
     }
 
     return EXIT_SUCCESS;
