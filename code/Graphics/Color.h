@@ -15,6 +15,8 @@ namespace GRAPHICS
         static constexpr float MAX_INTEGRAL_COLOR_COMPONENT = 255.0f;
         /// The color black.
         static const Color BLACK;
+        /// The color green.
+        static const Color GREEN;
 
         // CONSTRUCTION.
         static Color Unpack(const uint32_t packed_color, const ColorFormat color_format);

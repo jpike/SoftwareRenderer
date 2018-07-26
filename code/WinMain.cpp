@@ -2,8 +2,11 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <vector>
 #include <Windows.h>
+#include "Graphics/Renderer.h"
 #include "Graphics/RenderTarget.h"
+#include "Graphics/Triangle.h"
 #include "Windowing/Win32Window.h"
 
 // GLOBALS.
@@ -131,6 +134,19 @@ int CALLBACK WinMain(
     // CREATE THE MAIN RENDER TARGET.
     GRAPHICS::RenderTarget render_target(SCREEN_WIDTH_IN_PIXELS, SCREEN_HEIGHT_IN_PIXELS, GRAPHICS::ColorFormat::ARGB);
 
+    // CREATE THE RENDERER.
+    GRAPHICS::Renderer renderer;
+
+    // CREATE THE TRIANGLE TO RENDER.
+    GRAPHICS::Triangle triangle;
+    triangle.Color = GRAPHICS::Color::GREEN;
+    triangle.Vertices = 
+    {
+        MATH::Vector3f(50.0f, 50.0f, 0.0f),
+        MATH::Vector3f(75.0f, 100.0f, 0.0f),
+        MATH::Vector3f(25.0f, 100.0f, 0.0f)
+    };
+
     // RUN A MESSAGE LOOP.
     bool running = true;
     while (running)
@@ -174,6 +190,10 @@ int CALLBACK WinMain(
 
         /// @todo Render to render target.
         render_target.FillPixels(GRAPHICS::Color(1.0, 0.0, 0.0, 1.0f));
+
+        std::vector<GRAPHICS::Triangle> triangles;
+        triangles.push_back(triangle);
+        renderer.Render(triangles, render_target);
 
         /// @todo Copy render target to window.
         g_window->Display(render_target);

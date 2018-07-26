@@ -3,6 +3,7 @@
 namespace GRAPHICS
 {
     const Color Color::BLACK(0.0f, 0.0f, 0.0f, 1.0f);
+    const Color Color::GREEN(0.0f, 1.0f, 0.0f, 1.0f);
 
     /// Unpacks a color from a packed color format.
     /// @param[in]  packed_color - The color to unpack.
