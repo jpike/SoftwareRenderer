@@ -11,9 +11,14 @@ namespace GRAPHICS
     class Triangle
     {
     public:
+        // STATIC CONSTANTS.
         /// The number of vertices in a triangle.
         static constexpr std::size_t VERTEX_COUNT = 3;
 
+        // CONSTRUCTION.
+        static Triangle CreateEquilateral(const Color& color);
+
+        // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
         /// The color of the triangle.
         GRAPHICS::Color Color = Color::BLACK;
         /// The vertices of the triangle.

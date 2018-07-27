@@ -4,20 +4,35 @@
 
 namespace GRAPHICS
 {
-    /// Renders a list of triangles to the render target.
-    /// @param[in]  triangles - The triangles to render.
+    /// Renders a 3D object to the render target.
+    /// @param[in]  object_3D - The object to render.
     /// @param[in,out]  render_target - The target to render to.
-    void Renderer::Render(const std::vector<Triangle>& triangles, RenderTarget& render_target) const
+    void Renderer::Render(const Object3D& object_3D, RenderTarget& render_target) const
     {
-        // RENDER EACH TRIANGLE.
-        for (const auto& triangle : triangles)
+        // RENDER EACH TRIANGLE OF THE OBJECT.
+        for (const auto& local_triangle : object_3D.Triangles)
         {
-            Render(triangle, render_target);
+            // TRANSFORM THE TRIANGLE INTO SCREEN-SPACE.
+            Triangle screen_space_triangle = local_triangle;
+            for (auto& vertex : screen_space_triangle.Vertices)
+            {
+                vertex.X *= object_3D.Scale.X;
+                vertex.Y *= object_3D.Scale.Y;
+                vertex.Z *= object_3D.Scale.Z;
+
+                /// @todo   Flip Y more properly.
+                vertex.Y = -vertex.Y;
+
+                vertex += object_3D.WorldPosition;
+            }
+
+            // RENDER THE SCREEN-SPACE TRIANGLE.
+            Render(screen_space_triangle, render_target);
         }
     }
 
     /// Renders a single triangle to the render target.
-    /// @param[in]  triangle - The triangle to render.
+    /// @param[in]  triangle - The triangle to render (in screen-space coordinates).
     /// @param[in,out]  render_target - The target to render to.
     void Renderer::Render(const Triangle& triangle, RenderTarget& render_target) const
     {

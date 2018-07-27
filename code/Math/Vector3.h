@@ -28,6 +28,8 @@ namespace MATH
         // OPERATORS.
         bool operator== (const Vector3& rhs) const;
         bool operator!= (const Vector3& rhs) const;
+        Vector3 operator+ (const Vector3& rhs) const;
+        Vector3& operator+= (const Vector3& rhs);
         Vector3 operator- (const Vector3& rhs) const;
         Vector3 operator- () const;
 
@@ -146,6 +148,33 @@ namespace MATH
     {
         bool vectors_equal = ((*this) == rhs);
         return !vectors_equal;
+    }
+
+    /// Addition operator.
+    /// @param[in]  rhs - The vector on the right-hand side of the operator to
+    ///     add to this vector.
+    /// @return A new vector created by adding the provided vector to this vector.
+    template <typename ComponentType>
+    Vector3<ComponentType> Vector3<ComponentType>::operator+ (const Vector3<ComponentType>& rhs) const
+    {
+        MATH::Vector3<ComponentType> resulting_vector;
+        resulting_vector.X = this->X + rhs.X;
+        resulting_vector.Y = this->Y + rhs.Y;
+        resulting_vector.Z = this->Z + rhs.Z;
+        return resulting_vector;
+    }
+
+    /// Addition assignment operator.
+    /// @param[in]  rhs - The vector on the right-hand side of the operator to
+    ///     add to this vector.
+    /// @return This vector with the provided vector added to it.
+    template <typename ComponentType>
+    Vector3<ComponentType>& Vector3<ComponentType>::operator+= (const Vector3<ComponentType>& rhs)
+    {
+        this->X += rhs.X;
+        this->Y += rhs.Y;
+        this->Z += rhs.Z;
+        return (*this);
     }
 
     /// Subtraction operator.

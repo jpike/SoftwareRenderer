@@ -1,6 +1,8 @@
 #include "Graphics/Color.cpp"
+#include "Graphics/Object3D.cpp"
 #include "Graphics/Renderer.cpp"
 #include "Graphics/RenderTarget.cpp"
+#include "Graphics/Triangle.cpp"
 #include "Windowing/Win32Window.cpp"
 
 #include "WinMain.cpp"

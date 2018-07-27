@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Graphics/Color.h"
+#include "Graphics/Object3D.h"
 #include "Graphics/RenderTarget.h"
 #include "Graphics/Triangle.h"
 
@@ -11,7 +12,7 @@ namespace GRAPHICS
     class Renderer
     {
     public:
-        void Render(const std::vector<Triangle>& triangles, RenderTarget& render_target) const;
+        void Render(const Object3D& object_3D, RenderTarget& render_target) const;
 
     private:
         void Render(const Triangle& triangle, RenderTarget& render_target) const;
