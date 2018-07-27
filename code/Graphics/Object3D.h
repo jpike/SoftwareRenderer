@@ -20,9 +20,9 @@ namespace GRAPHICS
         std::vector<Triangle> Triangles = {};
         /// The world position of the object.
         MATH::Vector3f WorldPosition = MATH::Vector3f();
-        /// The scaling of the object.
-        MATH::Vector3f Scale = MATH::Vector3f();
         /// The rotation of the object along the 3 primary axes, expressed in radians per axis.
         MATH::Vector3< MATH::Angle<float>::Radians > RotationInRadians = MATH::Vector3< MATH::Angle<float>::Radians >();
+        /// The scaling of the object.
+        MATH::Vector3f Scale = MATH::Vector3f();
     };
 }

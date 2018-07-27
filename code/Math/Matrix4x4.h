@@ -5,6 +5,7 @@
 #include "Containers/Array2D.h"
 #include "Math/Angle.h"
 #include "Math/Vector3.h"
+#include "Math/Vector4.h"
 
 namespace MATH
 {
@@ -37,6 +38,7 @@ namespace MATH
 
         // OPERATORS.
         Matrix4x4 operator* (const Matrix4x4& rhs) const;
+        Vector4<ElementType> operator* (const Vector4<ElementType>& vector) const;
 
         // ELEMENT RETRIEVAL.
         const ElementType* ElementsInRowMajorOrder() const;
@@ -248,6 +250,53 @@ namespace MATH
         }
 
         return matrix_product;
+    }
+
+    /// Multiples a vector by this matrix.
+    /// @param[in]  vector - The vector to multiply on the right-hand side.
+    /// @return The vector transformed by this matrix.
+    template <typename ElementType>
+    Vector4<ElementType> Matrix4x4<ElementType>::operator* (const Vector4<ElementType>& vector) const
+    {
+        Vector4<ElementType> transformed_vector;
+
+        // CALCULATE THE X COMPONENT OF THE VECTOR.
+        const unsigned int ROW_1 = 0;
+        const unsigned int COLUMN_1 = 0;
+        const unsigned int COLUMN_2 = 1;
+        const unsigned int COLUMN_3 = 2;
+        const unsigned int COLUMN_4 = 3;
+        transformed_vector.X =
+            (this->Elements(COLUMN_1, ROW_1) * vector.X) +
+            (this->Elements(COLUMN_2, ROW_1) * vector.Y) +
+            (this->Elements(COLUMN_3, ROW_1) * vector.Z) +
+            (this->Elements(COLUMN_4, ROW_1) * vector.W);
+
+        // CALCULATE THE Y COMPONENT OF THE VECTOR.
+        const unsigned int ROW_2 = 1;
+        transformed_vector.Y =
+            (this->Elements(COLUMN_1, ROW_2) * vector.X) +
+            (this->Elements(COLUMN_2, ROW_2) * vector.Y) +
+            (this->Elements(COLUMN_3, ROW_2) * vector.Z) +
+            (this->Elements(COLUMN_4, ROW_2) * vector.W);
+
+        // CALCULATE THE Z COMPONENT OF THE VECTOR.
+        const unsigned int ROW_3 = 2;
+        transformed_vector.Z =
+            (this->Elements(COLUMN_1, ROW_3) * vector.X) +
+            (this->Elements(COLUMN_2, ROW_3) * vector.Y) +
+            (this->Elements(COLUMN_3, ROW_3) * vector.Z) +
+            (this->Elements(COLUMN_4, ROW_3) * vector.W);
+
+        // CALCULATE THE W COMPONENT OF THE VECTOR.
+        const unsigned int ROW_4 = 3;
+        transformed_vector.Z =
+            (this->Elements(COLUMN_1, ROW_4) * vector.X) +
+            (this->Elements(COLUMN_2, ROW_4) * vector.Y) +
+            (this->Elements(COLUMN_3, ROW_4) * vector.Z) +
+            (this->Elements(COLUMN_4, ROW_4) * vector.W);
+
+        return transformed_vector;
     }
 
     /// Gets the element values in row-major order

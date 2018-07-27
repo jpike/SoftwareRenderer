@@ -196,9 +196,19 @@ int CALLBACK WinMain(
 
 #if 1
         auto current_time = std::chrono::high_resolution_clock::now();
-        float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - frame_start_time).count();
-        std::string total_elapsed_time_string = std::to_string(total_elapsed_time) + "\n";
-        OutputDebugStringA(total_elapsed_time_string.c_str());
+        //float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - frame_start_time).count();
+        auto total_elapsed_time = current_time - frame_start_time; total_elapsed_time;
+        auto total_elapsed_time_milliseconds = std::chrono::duration_cast<
+            std::chrono::duration<float, std::chrono::milliseconds::period> >(total_elapsed_time);
+        std::string total_elapsed_time_milliseconds_string = std::to_string(total_elapsed_time_milliseconds.count()) + " ms\t";
+        OutputDebugStringA(total_elapsed_time_milliseconds_string.c_str());
+        auto total_elapsed_time_seconds = std::chrono::duration_cast<
+            std::chrono::duration<float, std::chrono::seconds::period> >(total_elapsed_time);
+        std::string total_elapsed_time_seconds_string = std::to_string(total_elapsed_time_seconds.count()) + " s\t";
+        OutputDebugStringA(total_elapsed_time_seconds_string.c_str());
+        float frames_per_second = 1.0f / total_elapsed_time_seconds.count();
+        std::string frames_per_second_string = std::to_string(frames_per_second) + " fps\n";
+        OutputDebugStringA(frames_per_second_string.c_str());
 #endif
     }
 

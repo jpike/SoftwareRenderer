@@ -10,20 +10,25 @@ namespace GRAPHICS
     void Renderer::Render(const Object3D& object_3D, RenderTarget& render_target) const
     {
         // RENDER EACH TRIANGLE OF THE OBJECT.
+        MATH::Matrix4x4f object_world_transform = object_3D.WorldTransform();
         for (const auto& local_triangle : object_3D.Triangles)
         {
             // TRANSFORM THE TRIANGLE INTO SCREEN-SPACE.
             Triangle screen_space_triangle = local_triangle;
             for (auto& vertex : screen_space_triangle.Vertices)
             {
-                vertex.X *= object_3D.Scale.X;
+                /*vertex.X *= object_3D.Scale.X;
                 vertex.Y *= object_3D.Scale.Y;
                 vertex.Z *= object_3D.Scale.Z;
 
                 /// @todo   Flip Y more properly.
                 vertex.Y = -vertex.Y;
 
-                vertex += object_3D.WorldPosition;
+                vertex += object_3D.WorldPosition;*/
+
+                MATH::Vector4f homogeneous_vertex = MATH::Vector4f::HomogeneousPositionVector(vertex);
+                MATH::Vector4f transformed_vertex = object_world_transform * homogeneous_vertex;
+                vertex = MATH::Vector3f(transformed_vertex.X, transformed_vertex.Y, transformed_vertex.Z);
             }
 
             // RENDER THE SCREEN-SPACE TRIANGLE.
@@ -87,7 +92,7 @@ namespace GRAPHICS
         // further along the axes.
         float delta_x = end_x - start_x;
         float delta_y = end_y - start_y;
-        float length = std::max(abs(delta_x), abs(delta_y));
+        float length = std::max(std::abs(delta_x), std::abs(delta_y));
         float x_increment = delta_x / length;
         float y_increment = delta_y / length;
 
