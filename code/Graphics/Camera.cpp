@@ -111,7 +111,7 @@ namespace GRAPHICS
             far_z_world_boundary);
 
         // COMPUTE THE FULL PERSPECTIVE PROJECTION MATRIX.
-        MATH::Matrix4x4f perspective_projection_matrix = orthographic_matrix * perspective_matrix;
+        MATH::Matrix4x4f perspective_projection_matrix = perspective_matrix * orthographic_matrix;
 
         return perspective_projection_matrix;
     }

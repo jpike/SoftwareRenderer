@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 #include <Windows.h>
 #include "Graphics/Object3D.h"
@@ -187,6 +188,9 @@ int CALLBACK WinMain(
     //object_3D.Scale = MATH::Vector3f(50.0f, 50.0f, 50.0f);
 
     // RUN A MESSAGE LOOP.
+    constexpr float TARGET_FRAMES_PER_SECOND = 60.0f;
+    constexpr std::chrono::duration<float, std::chrono::seconds::period> TARGET_SECONDS_PER_FRAME(1.0f / TARGET_FRAMES_PER_SECOND);
+
 #define ROTATE_TRIANGLE 1
 #if ROTATE_TRIANGLE
     float angle_in_radians = 0.0f;
@@ -253,16 +257,42 @@ int CALLBACK WinMain(
         auto frame_end_time = std::chrono::high_resolution_clock::now();
         //float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - frame_start_time).count();
         auto frame_elapsed_time = frame_end_time - frame_start_time;
+
         auto frame_elapsed_time_milliseconds = std::chrono::duration_cast<
             std::chrono::duration<float, std::chrono::milliseconds::period> >(frame_elapsed_time);
         std::string frame_elapsed_time_milliseconds_string = std::to_string(frame_elapsed_time_milliseconds.count()) + " ms\t";
-        OutputDebugStringA(frame_elapsed_time_milliseconds_string.c_str());
+        //OutputDebugStringA(frame_elapsed_time_milliseconds_string.c_str());
         auto frame_elapsed_time_seconds = std::chrono::duration_cast<
             std::chrono::duration<float, std::chrono::seconds::period> >(frame_elapsed_time);
         std::string frame_elapsed_time_seconds_string = std::to_string(frame_elapsed_time_seconds.count()) + " s\t";
-        OutputDebugStringA(frame_elapsed_time_seconds_string.c_str());
+        //OutputDebugStringA(frame_elapsed_time_seconds_string.c_str());
         float frames_per_second = 1.0f / frame_elapsed_time_seconds.count();
         std::string frames_per_second_string = std::to_string(frames_per_second) + " fps\n";
+        //OutputDebugStringA(frames_per_second_string.c_str());
+
+        /// @todo   Add some buffer time to keep frame rate from dipping too low?
+        bool frame_finished_early = frame_elapsed_time_seconds < TARGET_SECONDS_PER_FRAME;
+        if (frame_finished_early)
+        {
+            auto remaining_time_for_frame = TARGET_SECONDS_PER_FRAME - frame_elapsed_time_seconds;
+            std::this_thread::sleep_for(remaining_time_for_frame);
+        }
+
+        // Re-compute frame time to determine accuracy.
+        frame_end_time = std::chrono::high_resolution_clock::now();
+        //float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - frame_start_time).count();
+        frame_elapsed_time = frame_end_time - frame_start_time;
+        
+        frame_elapsed_time_milliseconds = std::chrono::duration_cast<
+            std::chrono::duration<float, std::chrono::milliseconds::period> >(frame_elapsed_time);
+        frame_elapsed_time_milliseconds_string = std::to_string(frame_elapsed_time_milliseconds.count()) + " ms\t";
+        OutputDebugStringA(frame_elapsed_time_milliseconds_string.c_str());
+        frame_elapsed_time_seconds = std::chrono::duration_cast<
+            std::chrono::duration<float, std::chrono::seconds::period> >(frame_elapsed_time);
+        frame_elapsed_time_seconds_string = std::to_string(frame_elapsed_time_seconds.count()) + " s\t";
+        OutputDebugStringA(frame_elapsed_time_seconds_string.c_str());
+        frames_per_second = 1.0f / frame_elapsed_time_seconds.count();
+        frames_per_second_string = std::to_string(frames_per_second) + " fps\n";
         OutputDebugStringA(frames_per_second_string.c_str());
 #endif
     }
