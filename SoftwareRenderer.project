@@ -1,3 +1,4 @@
+#include "Graphics/Camera.cpp"
 #include "Graphics/Color.cpp"
 #include "Graphics/Object3D.cpp"
 #include "Graphics/Renderer.cpp"

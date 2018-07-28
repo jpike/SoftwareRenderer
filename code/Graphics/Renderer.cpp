@@ -9,8 +9,47 @@ namespace GRAPHICS
     /// @param[in,out]  render_target - The target to render to.
     void Renderer::Render(const Object3D& object_3D, RenderTarget& render_target) const
     {
-        // RENDER EACH TRIANGLE OF THE OBJECT.
+        // COMPUTE THE FINAL TRANSFORMATION MATRIX FOR THE OBJECT.
         MATH::Matrix4x4f object_world_transform = object_3D.WorldTransform();
+        MATH::Matrix4x4f camera_view_transform = Camera.ViewTransform();
+
+        /// @todo   Figure out how we want to put projections into camera class.
+        const float LEFT_X_WORLD_BOUNDARY = Camera.WorldPosition.X - 1.0f;
+        const float RIGHT_X_WORLD_BOUNDARY = Camera.WorldPosition.X + 1.0f;
+        const float BOTTOM_Y_WORLD_BOUNDARY = Camera.WorldPosition.Y - 1.0f;
+        const float TOP_Y_WORLD_BOUNDARY = Camera.WorldPosition.Y + 1.0f;
+        const float NEAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 0.5f;
+        const float FAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 2.5f;
+        MATH::Matrix4x4f orthographic_projection_transform = Camera::OrthographicProjection(
+            LEFT_X_WORLD_BOUNDARY,
+            RIGHT_X_WORLD_BOUNDARY,
+            BOTTOM_Y_WORLD_BOUNDARY,
+            TOP_Y_WORLD_BOUNDARY,
+            NEAR_Z_WORLD_BOUNDARY,
+            FAR_Z_WORLD_BOUNDARY);
+
+        const MATH::Angle<float>::Degrees VERTICAL_FIELD_OF_VIEW_IN_DEGREES(60.0f);
+        const float ASPECT_RATIO_WIDTH_OVER_HEIGHT = 1.0f;
+        MATH::Matrix4x4f perspective_projection_transform = Camera::PerspectiveProjection(
+            VERTICAL_FIELD_OF_VIEW_IN_DEGREES,
+            ASPECT_RATIO_WIDTH_OVER_HEIGHT,
+            NEAR_Z_WORLD_BOUNDARY,
+            FAR_Z_WORLD_BOUNDARY);
+
+        MATH::Matrix4x4f flip_y_transform = MATH::Matrix4x4f::Scale(MATH::Vector3f(1.0f, -1.0f, 1.0f));
+        MATH::Matrix4x4f scale_to_screen_transform = MATH::Matrix4x4f::Scale(MATH::Vector3f(
+            static_cast<float>(render_target.GetWidthInPixels()) / 2.0f, 
+            static_cast<float>(render_target.GetHeightInPixels()) / 2.0f,
+            1.0f));
+        MATH::Matrix4x4f translate_to_screen_center_transform = MATH::Matrix4x4f::Translation(MATH::Vector3f(
+            static_cast<float>(render_target.GetWidthInPixels()) / 2.0f,
+            static_cast<float>(render_target.GetHeightInPixels()) / 2.0f,
+            0.0f));
+        MATH::Matrix4x4 screen_transform = translate_to_screen_center_transform * scale_to_screen_transform * flip_y_transform;
+
+        MATH::Matrix4x4f final_transform = screen_transform * orthographic_projection_transform * camera_view_transform * object_world_transform;
+
+        // RENDER EACH TRIANGLE OF THE OBJECT.
         for (const auto& local_triangle : object_3D.Triangles)
         {
             // TRANSFORM THE TRIANGLE INTO SCREEN-SPACE.
@@ -27,8 +66,10 @@ namespace GRAPHICS
                 vertex += object_3D.WorldPosition;*/
 
                 MATH::Vector4f homogeneous_vertex = MATH::Vector4f::HomogeneousPositionVector(vertex);
-                MATH::Vector4f transformed_vertex = object_world_transform * homogeneous_vertex;
+                MATH::Vector4f transformed_vertex = final_transform * homogeneous_vertex;
                 vertex = MATH::Vector3f(transformed_vertex.X, transformed_vertex.Y, transformed_vertex.Z);
+                /// @todo   Flip Y more properly.
+                //vertex.Y = -vertex.Y;
             }
 
             // RENDER THE SCREEN-SPACE TRIANGLE.
