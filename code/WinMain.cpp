@@ -176,7 +176,7 @@ int CALLBACK WinMain(
     // CREATE THE RENDERER.
     g_renderer = std::make_unique<GRAPHICS::Renderer>();
 
-    g_renderer->Camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
+    g_renderer->Camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 100.0f);
     g_renderer->Camera.LookAtWorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
     g_renderer->Camera.UpDirection = MATH::Vector3f(0.0f, 1.0f, 0.0f);
 
@@ -184,8 +184,9 @@ int CALLBACK WinMain(
     GRAPHICS::Triangle triangle = GRAPHICS::Triangle::CreateEquilateral(GRAPHICS::Color::GREEN);
     GRAPHICS::Object3D object_3D;
     object_3D.Triangles = { triangle };
-    object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
-    //object_3D.Scale = MATH::Vector3f(50.0f, 50.0f, 50.0f);
+    object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -100.0f);
+    constexpr float OBJECT_SCALE = 50.0f;
+    object_3D.Scale = MATH::Vector3f(OBJECT_SCALE, OBJECT_SCALE, OBJECT_SCALE);
 
     // RUN A MESSAGE LOOP.
     constexpr float TARGET_FRAMES_PER_SECOND = 60.0f;
@@ -245,12 +246,10 @@ int CALLBACK WinMain(
         object_3D.RotationInRadians.Z = MATH::Angle<float>::Radians(angle_in_radians);
 #endif
 
-        /// @todo Render to render target.
-        render_target.FillPixels(GRAPHICS::Color(1.0, 0.0, 0.0, 1.0f));
+        render_target.FillPixels(GRAPHICS::Color::BLACK);
 
         g_renderer->Render(object_3D, render_target);
 
-        /// @todo Copy render target to window.
         g_window->Display(render_target);
 
 #if 1

@@ -24,6 +24,20 @@ namespace WINDOWING
             return nullptr;
         }
 
+        // CALCULATE THE CLIENT RECTANGLE FOR THE WINDOW.
+        RECT client_rectangle;
+        client_rectangle.left = 0;
+        client_rectangle.top = 0;
+        client_rectangle.right = width_in_pixels;
+        client_rectangle.bottom = height_in_pixels;
+        BOOL result = AdjustWindowRect(&client_rectangle, WS_OVERLAPPEDWINDOW | WS_VISIBLE, FALSE);
+        &result;
+        /// @todo   Error-handling.
+        // Note that due to DPI scaling, this will commonly result in a window that is actually 125%
+        // bigger unless a user has adjusted his/her DPI scaling to be smaller than Windows' default.
+        int window_with_borders_width_in_pixels = client_rectangle.right - client_rectangle.left;
+        int window_with_borders_height_in_pixels = client_rectangle.bottom - client_rectangle.top;
+
         // CREATE THE WINDOW.
         const DWORD NO_EXTENDED_STYLE = 0;
         const DWORD WINDOW_STYLE = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
@@ -39,8 +53,8 @@ namespace WINDOWING
             WINDOW_STYLE,
             DEFAULT_LEFT_X_POSITION,
             DEFAULT_TOP_Y_POSITION,
-            width_in_pixels,
-            height_in_pixels,
+            window_with_borders_width_in_pixels,
+            window_with_borders_height_in_pixels,
             NO_PARENT_WINDOW,
             NO_WINDOW_MENU,
             window_class.hInstance,
@@ -50,9 +64,6 @@ namespace WINDOWING
         {
             return nullptr;
         }
-
-        /// @todo   Figure out how to guarantee pixel dimensions of window.
-        /// Things like AdjustWindowRect, MoveWindow, and SetWindowPos don't seem to be working.
 
         // WRAP THE WINDOW HANDLE IN THE WINDOW OBJECT.
         std::unique_ptr<Win32Window> window = std::make_unique<Win32Window>(window_handle);
@@ -116,14 +127,14 @@ namespace WINDOWING
             device_context,
             /// @todo   Perform proper scaling later.  Right now, the pixels
             /// are rendered to scale to make debugging easier.
-            /*clientRectangle.Left,
-            clientRectangle.Top,
-            clientRectangle.Right,
-            clientRectangle.Bottom,*/
-            0,
+            client_rectangle.left,
+            client_rectangle.top,
+            client_rectangle.right,
+            client_rectangle.bottom,
+            /*0,
             0,
             render_target_width,
-            render_target_height,
+            render_target_height,*/
             RENDER_TARGET_LEFT_X_POSITION,
             RENDER_TARGET_TOP_Y_POSITION,
             render_target_width,

@@ -14,12 +14,15 @@ namespace GRAPHICS
         MATH::Matrix4x4f camera_view_transform = Camera.ViewTransform();
 
         /// @todo   Figure out how we want to put projections into camera class.
-        const float LEFT_X_WORLD_BOUNDARY = Camera.WorldPosition.X - 1.0f;
-        const float RIGHT_X_WORLD_BOUNDARY = Camera.WorldPosition.X + 1.0f;
-        const float BOTTOM_Y_WORLD_BOUNDARY = Camera.WorldPosition.Y - 1.0f;
-        const float TOP_Y_WORLD_BOUNDARY = Camera.WorldPosition.Y + 1.0f;
-        const float NEAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 0.5f;
-        const float FAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 2.5f;
+        constexpr float WORLD_HALF_SIZE = 100.0f;
+        const float LEFT_X_WORLD_BOUNDARY = Camera.WorldPosition.X - WORLD_HALF_SIZE;
+        const float RIGHT_X_WORLD_BOUNDARY = Camera.WorldPosition.X + WORLD_HALF_SIZE;
+        const float BOTTOM_Y_WORLD_BOUNDARY = Camera.WorldPosition.Y - WORLD_HALF_SIZE;
+        const float TOP_Y_WORLD_BOUNDARY = Camera.WorldPosition.Y + WORLD_HALF_SIZE;
+        //const float NEAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 0.5f;
+        //const float FAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 2.5f;
+        const float NEAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 50.0f;
+        const float FAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 500.0f;
         MATH::Matrix4x4f orthographic_projection_transform = Camera::OrthographicProjection(
             LEFT_X_WORLD_BOUNDARY,
             RIGHT_X_WORLD_BOUNDARY,
@@ -28,7 +31,7 @@ namespace GRAPHICS
             NEAR_Z_WORLD_BOUNDARY,
             FAR_Z_WORLD_BOUNDARY);
 
-        const MATH::Angle<float>::Degrees VERTICAL_FIELD_OF_VIEW_IN_DEGREES(60.0f);
+        const MATH::Angle<float>::Degrees VERTICAL_FIELD_OF_VIEW_IN_DEGREES(90.0f);
         const float ASPECT_RATIO_WIDTH_OVER_HEIGHT = 1.0f;
         MATH::Matrix4x4f perspective_projection_transform = Camera::PerspectiveProjection(
             VERTICAL_FIELD_OF_VIEW_IN_DEGREES,
