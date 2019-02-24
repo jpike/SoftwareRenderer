@@ -4,6 +4,13 @@ namespace GRAPHICS
 {
 namespace RAY_TRACING
 {
+    /// Gets the material defining surface properties of the object.
+    /// @return The material for the object.
+    Material Triangle::GetMaterial() const
+    {
+        return Material;
+    }
+
     /// Checks for an intersection between a ray and the object.
     /// @param[in]  ray - The ray to check for intersection.
     /// @return A ray-object intersection, if one occurred; std::nullopt otherwise.
@@ -48,6 +55,7 @@ namespace RAY_TRACING
         // RETURN INFORMATION ABOUT THE INTERSECTION.
         RayObjectIntersection intersection;
         intersection.DistanceFromRayToObject = distance_from_ray_to_object;
+        intersection.Object = this;
         return intersection;
     }
 

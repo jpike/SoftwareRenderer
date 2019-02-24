@@ -94,7 +94,8 @@ namespace RAY_TRACING
                 if (closest_intersection)
                 {
                     // COMPUTE THE CURRENT PIXEL'S COLOR.
-                    render_target.WritePixel(x, y, GRAPHICS::Color::BLACK);
+                    Material material = closest_intersection->Object->GetMaterial();
+                    render_target.WritePixel(x, y, material.DiffuseColor);
                 }
                 else
                 {

@@ -18,6 +18,7 @@ namespace RAY_TRACING
         static constexpr std::size_t VERTEX_COUNT = 3;
 
         // INTERSECTION.
+        Material GetMaterial() const override;
         std::optional<RayObjectIntersection> Intersect(const Ray& ray) const override;
 
         // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.

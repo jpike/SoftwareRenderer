@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include "Graphics/RayTracing/Material.h"
 #include "Graphics/RayTracing/Ray.h"
 #include "Graphics/RayTracing/RayObjectIntersection.h"
 
@@ -12,6 +13,10 @@ namespace RAY_TRACING
     class IObject3D
     {
     public:
+        /// Gets the material defining surface properties of the object.
+        /// @return The material for the object.
+        virtual Material GetMaterial() const = 0;
+
         /// Checks for an intersection between a ray and the object.
         /// Intended to be implemented in derived classes so that each
         /// derived class can handle its own specific intersection logic.
