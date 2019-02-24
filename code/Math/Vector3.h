@@ -15,6 +15,7 @@ namespace MATH
     {
     public:
         // STATIC METHODS.
+        static Vector3 Scale(const ComponentType scale_factor, const Vector3& vector);
         static Vector3 Normalize(const Vector3& vector);
         static ComponentType DotProduct(const Vector3& vector_1, const Vector3& vector_2);
         static Vector3 CrossProduct(const Vector3& lhs, const Vector3& rhs);
@@ -50,6 +51,20 @@ namespace MATH
     typedef Vector3<unsigned int> Vector3ui;
     /// A vector composed of 3 float components.
     typedef Vector3<float> Vector3f;
+
+    /// Computes a scaled version of a vector.
+    /// @param[in]  scale_factor - The scale factor to multiply each component of the vector by.
+    /// @param[in]  vector - The vector to scale.
+    /// @return The scaled version of the vector.
+    template <typename ComponentType>
+    Vector3<ComponentType> Vector3<ComponentType>::Scale(const ComponentType scale_factor, const Vector3<ComponentType>& vector)
+    {
+        Vector3<ComponentType> scaled_vector;
+        scaled_vector.X = scale_factor * vector.X;
+        scaled_vector.Y = scale_factor * vector.Y;
+        scaled_vector.Z = scale_factor * vector.Z;
+        return scaled_vector;
+    }
 
     /// Normalizes a vector to be unit length (length of 1).
     /// @param[in]  vector - The vector to normalize.

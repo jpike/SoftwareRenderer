@@ -6,10 +6,17 @@
 #include <vector>
 #include <Windows.h>
 #include "Graphics/Object3D.h"
+#include "Graphics/RayTracing/Camera.h"
+#include "Graphics/RayTracing/Material.h"
+#include "Graphics/RayTracing/PointLight.h"
+#include "Graphics/RayTracing/RayTracingAlgorithm.h"
+#include "Graphics/RayTracing/Triangle.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/RenderTarget.h"
 #include "Graphics/Triangle.h"
 #include "Windowing/Win32Window.h"
+
+#define USE_RAY_TRACING 1
 
 // GLOBALS.
 // Global to provide access to them within the window procedure.
@@ -59,6 +66,17 @@ LRESULT CALLBACK MainWindowCallback(
             int virtual_key_code = static_cast<int>(w_param);
             switch (virtual_key_code)
             {
+#if USE_RAY_TRACING
+                case VK_UP:
+                    break;
+                case VK_DOWN:
+                    break;
+                case VK_LEFT:
+                    break;
+                case VK_RIGHT:
+                    break;
+            }
+#else
                 case VK_UP:
                     g_renderer->Camera.WorldPosition.Y += move_speed;
                     g_renderer->Camera.LookAtWorldPosition.Y += move_speed;
@@ -90,6 +108,7 @@ LRESULT CALLBACK MainWindowCallback(
             camera_position += std::to_string(g_renderer->Camera.WorldPosition.Y) + ",";
             camera_position += std::to_string(g_renderer->Camera.WorldPosition.Z) + "\n";
             OutputDebugString(camera_position.c_str());
+#endif
             break;
         }
         /// @todo case WM_SETCURSOR:
@@ -173,6 +192,82 @@ int CALLBACK WinMain(
     // CREATE THE MAIN RENDER TARGET.
     GRAPHICS::RenderTarget render_target(SCREEN_WIDTH_IN_PIXELS, SCREEN_HEIGHT_IN_PIXELS, GRAPHICS::ColorFormat::ARGB);
 
+    // CREATE A SCENE.
+    GRAPHICS::RAY_TRACING::Scene scene;
+    scene.PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+        MATH::Vector3f(0.0f, 0.0f, 0.0f),
+        GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
+    scene.BackgroundColor = GRAPHICS::Color(0.3f, 0.3f, 0.7f, 0.0f);
+
+    GRAPHICS::RAY_TRACING::Material material;
+    material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+    material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+    material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+    material.SpecularPower = 1.0f;
+    material.KReflected = 0.0f;
+
+    auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(-1.0f, -1.0f, -2.0f),
+        MATH::Vector3f(1.0f, -1.0f, -2.0f),
+        MATH::Vector3f(0.0f, 1.0f, -2.0f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    // DEFINE THE CAMERA.
+    GRAPHICS::RAY_TRACING::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
+    camera.FieldOfView = MATH::Angle<float>::Degrees(60.0f);
+
+    // PERFORM RAY TRACING.
+    GRAPHICS::RAY_TRACING::RayTracingAlgorithm ray_tracer;
+    ray_tracer.Camera = camera;
+    ray_tracer.Render(scene, render_target);
+
+#if USE_RAY_TRACING
+    bool running = true;
+    while (running)
+    {
+        // PROCESS ANY MESSAGES FOR THE APPLICATION WINDOW.
+        MSG message;
+        auto message_received = [&]()
+        {
+            const HWND ALL_MESSAGES_FOR_CURRENT_THREAD = NULL;
+            const UINT NO_MIN_MESSAGE_RESTRICTION = 0;
+            const UINT NO_MAX_MESSAGE_RESTRICTION = 0;
+
+            return PeekMessageA(
+                &message,
+                ALL_MESSAGES_FOR_CURRENT_THREAD,
+                NO_MIN_MESSAGE_RESTRICTION,
+                NO_MAX_MESSAGE_RESTRICTION,
+                PM_REMOVE);
+        };
+        while (message_received())
+        {
+            // STOP RUNNING THE APPLICATION IF THE USER DECIDED TO QUIT.
+            if (message.message == WM_QUIT)
+            {
+                running = false;
+                break;
+            }
+
+            // TRANSLATE VIRTUAL KEY MESSAGES TO CHARACTER MESSAGES.
+            // The return value is not checked since failure is not problematic
+            // and the only thing that could be done is logging.
+            TranslateMessage(&message);
+
+            // DISPATCH THE MESSAGE TO THE WINDOW PROCEDURE.
+            // The return value is simply the return value from the window procedure.
+            // Nothing value could be done with it besides logging, so it is ignored.
+            DispatchMessage(&message);
+        }
+
+        g_window->Display(render_target);
+    }
+#else
     // CREATE THE RENDERER.
     g_renderer = std::make_unique<GRAPHICS::Renderer>();
 
@@ -295,6 +390,7 @@ int CALLBACK WinMain(
         OutputDebugStringA(frames_per_second_string.c_str());
 #endif
     }
+#endif
 
     return EXIT_SUCCESS;
 }
