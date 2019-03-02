@@ -25,6 +25,11 @@ static std::unique_ptr<WINDOWING::Win32Window> g_window = nullptr;
 /// The renderer.
 static std::unique_ptr<GRAPHICS::Renderer> g_renderer = nullptr;
 
+/// \todo   temporary?
+static GRAPHICS::RAY_TRACING::Scene* g_scene = nullptr;
+static GRAPHICS::RAY_TRACING::RayTracingAlgorithm* g_ray_tracer = nullptr;
+static GRAPHICS::RenderTarget* g_render_target = nullptr;
+
 /// The main window callback procedure for processing messages sent to the main application window.
 /// @param[in]  window - Handle to the window.
 /// @param[in]  message - The message.
@@ -68,14 +73,56 @@ LRESULT CALLBACK MainWindowCallback(
             {
 #if USE_RAY_TRACING
                 case VK_UP:
+                    g_ray_tracer->Camera.WorldPosition.Y += 0.1f;
                     break;
                 case VK_DOWN:
+                    g_ray_tracer->Camera.WorldPosition.Y -= 0.1f;
                     break;
                 case VK_LEFT:
+                    g_ray_tracer->Camera.WorldPosition.X -= 0.1f;
                     break;
                 case VK_RIGHT:
+                    g_ray_tracer->Camera.WorldPosition.X += 0.1f;
+                    break;
+                case 0x5A: // Z
+                    g_ray_tracer->Camera.WorldPosition.Z += 0.1f;
+                    break;
+                case 0x58: // X
+                    g_ray_tracer->Camera.WorldPosition.Z -= 0.1f;
+                    break;
+                case 0x31: // 1
+                    g_ray_tracer->Camera.ViewingPlane.FocalLength += 0.1f;
+                    break;
+                case 0x32: // 2
+                    g_ray_tracer->Camera.ViewingPlane.FocalLength -= 0.1f;
+                    break;
+                case 0x30: // 0
+                    if (GRAPHICS::ProjectionType::ORTHOGRAPHIC == g_ray_tracer->Camera.Projection)
+                    {
+                        g_ray_tracer->Camera.Projection = GRAPHICS::ProjectionType::PERSPECTIVE;
+                    }
+                    else
+                    {
+                        g_ray_tracer->Camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
+                    }
+                    break;
+                case 0x51: // Q
+                    break;
+                case 0x57: // W
+                    break;
+                case 0x45: // E
+                    break;
+                case 0x52: // R
+                    break;
+                case 0x54: // T
+                    break;
+                case 0x59: // Y
                     break;
             }
+
+            OutputDebugString(std::to_string(g_ray_tracer->Camera.ViewingPlane.FocalLength).c_str());
+            OutputDebugString("\n");
+            g_ray_tracer->Render(*g_scene, *g_render_target);
 #else
                 case VK_UP:
                     g_renderer->Camera.WorldPosition.Y += move_speed;
@@ -212,19 +259,23 @@ int CALLBACK WinMain(
         MATH::Vector3f(-1.0f, -1.0f, -2.0f),
         MATH::Vector3f(1.0f, -1.0f, -2.0f),
         MATH::Vector3f(0.0f, 1.0f, -2.0f),
+        /*MATH::Vector3f(-0.5f, -0.5f, -2.0f),
+        MATH::Vector3f(0.5f, -0.5f, -2.0f),
+        MATH::Vector3f(0.0f, 0.5f, -2.0f),*/
     };
     triangle->Material = material;
     scene.Objects.push_back(std::move(triangle));
 
-    // DEFINE THE CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
-    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
-    camera.FieldOfView = MATH::Angle<float>::Degrees(60.0f);
-
     // PERFORM RAY TRACING.
     GRAPHICS::RAY_TRACING::RayTracingAlgorithm ray_tracer;
-    ray_tracer.Camera = camera;
+
+    ray_tracer.Camera = GRAPHICS::RAY_TRACING::Camera::LookAt(MATH::Vector3f(0.0f, 0.0f, 0.0f));
+
     ray_tracer.Render(scene, render_target);
+
+    g_scene = &scene;
+    g_render_target = &render_target;
+    g_ray_tracer = &ray_tracer;
 
 #if USE_RAY_TRACING
     bool running = true;

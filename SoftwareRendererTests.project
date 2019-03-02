@@ -1,0 +1,4 @@
+#define CATCH_CONFIG_MAIN
+#include "ThirdParty/Catch/catch.hpp"
+
+#include "Graphics/RayTracing/CameraTests.cpp"

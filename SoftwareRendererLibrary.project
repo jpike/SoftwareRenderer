@@ -1,6 +1,7 @@
 #include "Graphics/Camera.cpp"
 #include "Graphics/Color.cpp"
 #include "Graphics/Object3D.cpp"
+#include "Graphics/RayTracing/Camera.cpp"
 #include "Graphics/RayTracing/PointLight.cpp"
 #include "Graphics/RayTracing/Ray.cpp"
 #include "Graphics/RayTracing/RayTracingAlgorithm.cpp"
@@ -8,6 +9,5 @@
 #include "Graphics/Renderer.cpp"
 #include "Graphics/RenderTarget.cpp"
 #include "Graphics/Triangle.cpp"
+#include "Math/CoordinateFrame.cpp"
 #include "Windowing/Win32Window.cpp"
-
-#include "WinMain.cpp"

@@ -11,7 +11,8 @@
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/um",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/shared",
                 "${env.VCToolsInstallDir}include",
-                "${projectRoot}/code"
+                "${projectRoot}/code",
+                "${projectRoot}/testing"
             ]
         },
         {
@@ -24,7 +25,8 @@
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/um",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/shared",
                 "${env.VCToolsInstallDir}include",
-                "${projectRoot}/code"
+                "${projectRoot}/code",
+                "${projectRoot}/testing"
             ]
         }
     ]
