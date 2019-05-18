@@ -20,76 +20,8 @@ namespace RAY_TRACING
             for (unsigned int x = 0; x < render_target_width_in_pixels; ++x)
             {
                 // COMPUTE THE VIEWING RAY.
-                /*// It should go from the camera's position through the viewing plane toward the current pixel.
-                // The pixel coordinates must first be normalized.
-                // 1. Shift the coordinates down so that the minimum coordinates are negative.
-                //      By doing this by the half-width of the render target, this means the
-                //      new center will correspond with the center of the render target.
-                float render_target_half_width_in_pixels = render_target_width_in_pixels / 2.0f;
-                float x_shifted_down = (x - render_target_half_width_in_pixels);
-                // 2. Scale the coordinates to be in the normalized range of [-1, 1].
-                float normalized_x = x_shifted_down / render_target_width_in_pixels;
-
-                // The same conversion must happen for y, but since the render target pixel coordinates
-                // have y increasing going down but the viewing plane has y increasing going up,
-                // the y coordinate must be flipped.
-                float render_target_half_height_in_pixels = render_target_height_in_pixels / 2.0f;
-                float y_shifted_down = (y - render_target_half_height_in_pixels);
-                constexpr float FLIP_Y = -1.0f;
-                float normalized_y = y_shifted_down / render_target_height_in_pixels * FLIP_Y;
-                
-                MATH::Vector2f normalized_pixel_coordinates(normalized_x, normalized_y);*/
                 MATH::Vector2ui pixel_coordinates(x, y);
                 Ray ray = Camera.ViewingRay(pixel_coordinates, render_target);
-
-                /*
-                // CREATE THE VIEWING RAY.
-                // It should go from the camera's position through the viewing plane toward the current pixel.
-                MATH::Angle<float>::Radians camera_field_of_view_in_radians = MATH::Angle<float>::DegreesToRadians(Camera.FieldOfView);
-
-                // In order to convert the current pixel coordinate to proper coordinates for the viewing ray,
-                // several transformations are needed to convert from a [0, pixel dimension] range to
-                // a range for the viewing plane:
-                // 1. Shift the coordinates down so that the minimum coordinates are negative.
-                //      By doing this by the half-width of the render target, this means the
-                //      new center will correspond with the center of the render target.
-                float render_target_half_width_in_pixels = render_target_width_in_pixels / 2.0f;
-                float x_shifted_down = (x - render_target_half_width_in_pixels);
-                // 2. Scale the coordinates to be in the range of the viewing plane
-                //      instead of the pixel range of the render target.
-                float x_scaled_to_viewing_plane_range = x_shifted_down * Camera.ViewingPlane.Width / render_target_width_in_pixels;
-                // 3. Scale the coordinates based on the ratio of the camera's field of view and the
-                //      distance of the camera from the viewing plane (the tangent represents the ratio
-                //      between the horizontal (x) and vertical (y) dimensions with the depth (z) dimension).
-                //      This helps provide perspective scaling based on distance.
-                float half_field_of_view_in_radians = camera_field_of_view_in_radians.Value / 2.0f;
-                float ratio_between_camera_view_dimensions_and_distance_from_viewing_plane = std::tan(half_field_of_view_in_radians);
-                float view_x_direction = x_scaled_to_viewing_plane_range * ratio_between_camera_view_dimensions_and_distance_from_viewing_plane;
-
-                // The same conversion must happen for y, but since the render target pixel coordinates
-                // have y increasing going down but the viewing plane has y increasing going up,
-                // the y coordinate must be flipped.
-                float render_target_half_height_in_pixels = render_target_height_in_pixels / 2.0f;
-                float y_shifted_down = (y - render_target_half_height_in_pixels);
-                float y_scaled_to_viewing_plane_range = y_shifted_down * Camera.ViewingPlane.Height / render_target_height_in_pixels;
-                float y_scaled_based_on_camera_distance = y_scaled_to_viewing_plane_range * ratio_between_camera_view_dimensions_and_distance_from_viewing_plane;
-                constexpr float FLIP_Y = -1.0f;
-                float view_y_direction = y_scaled_based_on_camera_distance * FLIP_Y;
-                
-                // Since we're using a right-handed coordinate system and the camera is looking down
-                // the negative z-axis, the z component of the view direction needs to be negated
-                // from the camera's focal length.
-                MATH::Vector3f view_direction(view_x_direction, view_y_direction, -Camera.ViewingPlane.FocalLength);
-
-                Ray ray(Camera.WorldPosition, view_direction);
-                */
-
-                // orthographic
-                //view_direction = MATH::Vector3f(0, 0, -Camera.ViewingPlane.FocalLength);
-                //MATH::Vector3f ray_origin = Camera.WorldPosition;
-                //ray_origin.X += x_scaled_to_viewing_plane_range;
-                //ray_origin.Y -= y_scaled_to_viewing_plane_range;
-                //Ray ray(ray_origin, view_direction);
 
                 // FIND THE CLOSEST OBJECT IN THE SCENE THAT THE RAY INTERSECTS.
                 std::optional<RayObjectIntersection> closest_intersection = std::nullopt;
@@ -125,8 +57,8 @@ namespace RAY_TRACING
                 if (closest_intersection)
                 {
                     // COMPUTE THE CURRENT PIXEL'S COLOR.
-                    Material material = closest_intersection->Object->GetMaterial();
-                    render_target.WritePixel(x, y, material.DiffuseColor);
+                    Color color = ComputeColor(*closest_intersection);
+                    render_target.WritePixel(x, y, color);
                 }
                 else
                 {
@@ -135,6 +67,14 @@ namespace RAY_TRACING
                 }
             }
         }
+    }
+
+    /// Computes color based on the specified intersection.
+    /// @param[in]  intersection - The intersection for which to compute the color.
+    /// @return The computed color.
+    GRAPHICS::Color RayTracingAlgorithm::ComputeColor(const RayObjectIntersection& intersection) const
+    {
+        return intersection.Object->GetMaterial().DiffuseColor;
     }
 }
 }

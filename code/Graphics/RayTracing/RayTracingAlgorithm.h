@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Graphics/Color.h"
 #include "Graphics/RayTracing/Camera.h"
+#include "Graphics/RayTracing/RayObjectIntersection.h"
 #include "Graphics/RayTracing/Scene.h"
 #include "Graphics/RenderTarget.h"
 
@@ -14,6 +16,7 @@ namespace RAY_TRACING
     {
     public:
         void Render(const Scene& scene, GRAPHICS::RenderTarget& render_target);
+        GRAPHICS::Color ComputeColor(const RayObjectIntersection& intersection) const;
 
         GRAPHICS::RAY_TRACING::Camera Camera = GRAPHICS::RAY_TRACING::Camera();
     };

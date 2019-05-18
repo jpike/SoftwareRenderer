@@ -253,6 +253,7 @@ int CALLBACK WinMain(
     material.SpecularPower = 1.0f;
     material.KReflected = 0.0f;
 
+#if BASIC_TRIANGLE
     auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
     triangle->Vertices =
     {
@@ -265,6 +266,205 @@ int CALLBACK WinMain(
     };
     triangle->Material = material;
     scene.Objects.push_back(std::move(triangle));
+#endif
+
+    auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.525731f, 0.850651f, -3.0f),
+        MATH::Vector3f(0.850651f, 0.0f, -2.474269f),
+        MATH::Vector3f(0.850651f, 0.0f, -3.525731f)
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.850651f, 0.0f, -3.525731f),
+        MATH::Vector3f(0.850651f, 0.0f, -2.474269f),
+        MATH::Vector3f(0.525731f, -0.850651f, -3.0f)
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(-0.525731f, 0.850651f, -3.0f),
+        MATH::Vector3f(-0.850651f, 0.0f, -3.525731f),
+        MATH::Vector3f(0.850651f, 0.0f, -2.474269f)
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(-0.525731f, -0.850651f, -3.0f),
+        MATH::Vector3f(-0.850651f, 0.0f, -2.474269f),
+        MATH::Vector3f(-0.850651f, 0.0f, -3.525731f)
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, 0.525731f, -2.149349f),
+        MATH::Vector3f(0.525731f, 0.850651f, -3.0f),
+        MATH::Vector3f(-0.525731f, 0.850651f, -3.0f)
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, 0.525731f, -3.850651f),
+        MATH::Vector3f(-0.525731f, 0.850651f, -3.0f),
+        MATH::Vector3f(0.525731f, 0.850651f, -3.0f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.850651f, 0.0f, -3.525731f),
+        MATH::Vector3f(0.0f, -0.525731f, -3.850651f),
+        MATH::Vector3f(0.0f, 0.525731f, -3.850651f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(-0.850651f, 0.0f, -3.525731f),
+        MATH::Vector3f(0.0f, 0.525731f, -3.850651f),
+        MATH::Vector3f(0.0f, -0.525731f, -3.850651f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, -0.525731f, -3.850651f),
+        MATH::Vector3f(0.525731f, -0.850651f, -3.0f),
+        MATH::Vector3f(-0.525731f, -0.850651f, -3.0f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, -0.525731f, -2.149349f),
+        MATH::Vector3f(-0.525731f, -0.850651f, -3.0f),
+        MATH::Vector3f(0.525731f, -0.850651f, -3.0f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.850651f, 0.0f, -2.474269f),
+        MATH::Vector3f(0.0f, 0.525731f, -2.149349f),
+        MATH::Vector3f(0.0f, -0.525731f, -2.149349f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(-0.850651f, 0.0f, -2.474269f),
+        MATH::Vector3f(0.0f, -0.525731f, -2.149349f),
+        MATH::Vector3f(0.0f, 0.525731f, -2.149349f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, 0.525731f, -3.850651f),
+        MATH::Vector3f(0.525731f, 0.850651f, -3.0f),
+        MATH::Vector3f(0.850651f, 0.0f, -3.525731f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, 0.525731f, -2.149349f),
+        MATH::Vector3f(0.850651f, 0.0f, -2.474269f),
+        MATH::Vector3f(0.525731f, 0.850651f, -3.0f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, 0.525731f, -3.850651f),
+        MATH::Vector3f(-0.850651f, 0.0f, -3.525731f),
+        MATH::Vector3f(-0.525731f, 0.850651f, -3.0f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, 0.525731f, -2.149349f),
+        MATH::Vector3f(-0.525731f, 0.850651f, -3.0f),
+        MATH::Vector3f(-0.850651f, 0.0f, -2.474269f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, -0.525731f, -3.850651f),
+        MATH::Vector3f(0.850651f, 0.0f, -3.525731f),
+        MATH::Vector3f(0.525731f, -0.850651f, -3.0f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, -0.525731f, -2.149349f),
+        MATH::Vector3f(0.525731f, -0.850651f, -3.0f),
+        MATH::Vector3f(0.850651f, 0.0f, -2.474269f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(-0.525731f, -0.850651f, -3.0f),
+        MATH::Vector3f(-0.850651f, 0.0f, -3.525731f),
+        MATH::Vector3f(0.0f, -0.525731f, -3.850651f),
+    };
+    triangle->Material = material;
+    scene.Objects.push_back(std::move(triangle));
+
+    triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+    triangle->Vertices =
+    {
+        MATH::Vector3f(0.0f, -0.525731f, -2.149349f),
+        MATH::Vector3f(-0.850651f, 0.0f, -2.474269f),
+        MATH::Vector3f(-0.525731f, -0.850651f, -3.0f),
+    };
 
     // PERFORM RAY TRACING.
     GRAPHICS::RAY_TRACING::RayTracingAlgorithm ray_tracer;
