@@ -241,6 +241,8 @@ int CALLBACK WinMain(
 
     // CREATE A SCENE.
     GRAPHICS::RAY_TRACING::Scene scene;
+
+#if BASIC_TRIANGLE
     scene.PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
         MATH::Vector3f(0.0f, 0.0f, 0.0f),
         GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
@@ -253,7 +255,6 @@ int CALLBACK WinMain(
     material.SpecularPower = 1.0f;
     material.KReflected = 0.0f;
 
-#if BASIC_TRIANGLE
     auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
     triangle->Vertices =
     {
@@ -267,6 +268,20 @@ int CALLBACK WinMain(
     triangle->Material = material;
     scene.Objects.push_back(std::move(triangle));
 #endif
+
+#define MULTI_POLYGON_OBJECT 1
+#if MULTI_POLYGON_OBJECT
+    scene.PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+        MATH::Vector3f(4.0f, 4.0f, 8.0f),
+        GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
+    scene.BackgroundColor = GRAPHICS::Color(0.3f, 0.3f, 0.7f, 0.0f);
+
+    GRAPHICS::RAY_TRACING::Material material;
+    material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+    material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+    material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+    material.SpecularPower = 1.0f;
+    material.KReflected = 0.0f;
 
     auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
     triangle->Vertices =
@@ -465,6 +480,7 @@ int CALLBACK WinMain(
         MATH::Vector3f(-0.850651f, 0.0f, -2.474269f),
         MATH::Vector3f(-0.525731f, -0.850651f, -3.0f),
     };
+#endif
 
     // PERFORM RAY TRACING.
     GRAPHICS::RAY_TRACING::RayTracingAlgorithm ray_tracer;

@@ -16,7 +16,9 @@ namespace RAY_TRACING
     {
     public:
         void Render(const Scene& scene, GRAPHICS::RenderTarget& render_target);
-        GRAPHICS::Color ComputeColor(const RayObjectIntersection& intersection) const;
+        GRAPHICS::Color ComputeColor(
+            const Scene& scene,
+            const RayObjectIntersection& intersection) const;
 
         GRAPHICS::RAY_TRACING::Camera Camera = GRAPHICS::RAY_TRACING::Camera();
     };

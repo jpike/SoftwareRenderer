@@ -13,6 +13,10 @@ namespace GRAPHICS
         // STATIC CONSTANTS.
         /// The maximum integral color component, expressed as a float for easy conversion.
         static constexpr float MAX_INTEGRAL_COLOR_COMPONENT = 255.0f;
+        /// The minimum floating-point color component.
+        static constexpr float MIN_FLOAT_COLOR_COMPONENT = 0.0f;
+        /// The maximum floating-point color component.
+        static constexpr float MAX_FLOAT_COLOR_COMPONENT = 1.0f;
         /// The color black.
         static const Color BLACK;
         /// The color green.
@@ -20,6 +24,8 @@ namespace GRAPHICS
 
         // CONSTRUCTION.
         static Color Unpack(const uint32_t packed_color, const ColorFormat color_format);
+        static Color ScaleRedGreenBlue(const Color& color, const float& scale_factor);
+        static Color ComponentMultiplyRedGreenBlue(const Color& color_1, const Color& color_2);
         explicit Color(
             const float red,
             const float green,
@@ -33,6 +39,7 @@ namespace GRAPHICS
 
         // OPERATORS.
         bool operator==(const Color& rhs) const;
+        Color& operator+=(const Color& rhs);
 
         // FLOATING-POINT ACCESS.
         float GetRedAsFloat32() const;
@@ -53,6 +60,7 @@ namespace GRAPHICS
         // HELPER METHODS.
         float ToFloatColorComponent(const uint8_t color_component_as_uint8) const;
         uint8_t ToIntegerColorComponent(const float color_component_as_float) const;
+        void Clamp();
 
         // MEMBER VARIABLES.
         /// The red component of the color.

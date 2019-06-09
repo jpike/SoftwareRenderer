@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include "Graphics/RayTracing/RayTracingAlgorithm.h"
 #include "Math/Angle.h"
@@ -57,7 +58,7 @@ namespace RAY_TRACING
                 if (closest_intersection)
                 {
                     // COMPUTE THE CURRENT PIXEL'S COLOR.
-                    Color color = ComputeColor(*closest_intersection);
+                    Color color = ComputeColor(scene, *closest_intersection);
                     render_target.WritePixel(x, y, color);
                 }
                 else
@@ -69,12 +70,50 @@ namespace RAY_TRACING
         }
     }
 
-    /// Computes color based on the specified intersection.
+    /// Computes color based on the specified intersection in the scene.
+    /// @param[in]  scene - The scene in which the color is being computed.
     /// @param[in]  intersection - The intersection for which to compute the color.
     /// @return The computed color.
-    GRAPHICS::Color RayTracingAlgorithm::ComputeColor(const RayObjectIntersection& intersection) const
+    GRAPHICS::Color RayTracingAlgorithm::ComputeColor(
+        const Scene& scene, 
+        const RayObjectIntersection& intersection) const
     {
-        return intersection.Object->GetMaterial().DiffuseColor;
+        // INITIALIZE THE COLOR TO HAVE NO CONTRIBUTION FROM ANY SOURCES.
+        Color final_color = Color::BLACK;
+
+        // ADD IN THE AMBIENT COLOR.
+        const Material& intersected_material = intersection.Object->GetMaterial();
+        final_color += intersected_material.AmbientColor;
+
+        // ADD IN DIFFUSE COLOR FROM LIGHTS.
+        Color light_total_color = Color::BLACK;
+        MATH::Vector3f intersection_point = intersection.IntersectionPoint();
+        MATH::Vector3f unit_surface_normal = intersection.Object->SurfaceNormal(intersection_point);
+        for (const PointLight& light : scene.PointLights)
+        {
+            // ADD COLOR FROM THE CURRENT LIGHT.
+            // This is based on the Lambertian shading model.
+            // An object is maximally illuminated when facing toward the light.
+            // An object tangent to the light direction or facing away receives no illumination.
+            // In-between, the amount of illumination is proportional to the cosine of the angle between
+            // the light and surface normal (where the cosine can be computed via the dot product).
+            MATH::Vector3f unit_direction_from_point_to_light = light.DirectionFrom(intersection_point);
+            constexpr float NO_ILLUMINATION = 0.0f;
+            float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
+            illumination_proportion = std::max(NO_ILLUMINATION, illumination_proportion);
+
+            // ADD THE CURRENT LIGHT'S COLOR.
+            Color current_light_color = Color::ScaleRedGreenBlue(light.Color, illumination_proportion);
+            light_total_color += current_light_color;
+        }
+
+        // The diffuse color is multiplied component-wise by the amount of light.
+        Color diffuse_color = Color::ComponentMultiplyRedGreenBlue(
+            intersected_material.DiffuseColor,
+            light_total_color);
+        final_color += diffuse_color;
+
+        return final_color;
     }
 }
 }

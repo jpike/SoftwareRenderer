@@ -13,6 +13,11 @@ namespace RAY_TRACING
     class IObject3D
     {
     public:
+        /// Computes the surface normal of the object at given point.
+        /// @param[in]  surface_point - The point on the object's surface at which to compute a normal.
+        /// @return The unit surface normal at the specified point.
+        virtual MATH::Vector3f SurfaceNormal(const MATH::Vector3f& surface_point) const = 0;
+
         /// Gets the material defining surface properties of the object.
         /// @return The material for the object.
         virtual Material GetMaterial() const = 0;

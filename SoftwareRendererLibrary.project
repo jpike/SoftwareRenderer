@@ -4,6 +4,7 @@
 #include "Graphics/RayTracing/Camera.cpp"
 #include "Graphics/RayTracing/PointLight.cpp"
 #include "Graphics/RayTracing/Ray.cpp"
+#include "Graphics/RayTracing/RayObjectIntersection.cpp"
 #include "Graphics/RayTracing/RayTracingAlgorithm.cpp"
 #include "Graphics/RayTracing/Triangle.cpp"
 #include "Graphics/Renderer.cpp"

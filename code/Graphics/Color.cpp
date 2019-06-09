@@ -1,4 +1,5 @@
 #include "Graphics/Color.h"
+#include "Math/Number.h"
 
 namespace GRAPHICS
 {
@@ -38,6 +39,48 @@ namespace GRAPHICS
                 // RETURN A DEFAULT COLOR.
                 return Color::BLACK;
         }
+    }
+
+    /// Scales the color by the specified factor, performing clamping.
+    /// Only red, green, and blue components are scaled (alpha is left alone).
+    /// @param[in]  color - The original color to scale.
+    /// @param[in]  scale_factor - The scaling factor to multiply the color by.
+    /// @return A copy of the color scaled as specified.
+    Color Color::ScaleRedGreenBlue(const Color& color, const float& scale_factor)
+    {
+        // COPY THE COLOR FOR MODIFICATIONS.
+        Color scaled_color = color;
+
+        // SCALE THE COLOR COMPONENTS.
+        scaled_color.Red *= scale_factor;
+        scaled_color.Green *= scale_factor;
+        scaled_color.Blue *= scale_factor;
+        
+        // Clamping is performed to keep them within the valid range.
+        scaled_color.Clamp();
+
+        // RETURN THE SCALED COLOR.
+        return scaled_color;
+    }
+
+    /// Performs component-wise multiplication of the colors (excluding alpha components),
+    /// performing clamping.
+    /// @param[in]  color_1 - One color to multiply by.
+    /// @param[in]  color_2 - The other color to multiply by.
+    /// @return The component-wise multiplied color.
+    Color Color::ComponentMultiplyRedGreenBlue(const Color& color_1, const Color& color_2)
+    {
+        Color multiplied_color = Color::BLACK;
+
+        // MULTIPLY THE COLOR COMPONENTS.
+        multiplied_color.Red = color_1.Red * color_2.Red;
+        multiplied_color.Green = color_1.Green * color_2.Green;
+        multiplied_color.Blue = color_1.Blue * color_2.Blue;
+
+        // Clamping is performed to keep them within the valid range.
+        multiplied_color.Clamp();
+
+        return multiplied_color;
     }
 
     /// Constructor taking floating-point components.
@@ -100,6 +143,26 @@ namespace GRAPHICS
 
         // All color components were equal.
         return true;
+    }
+
+    /// Adds a color's components to this color.
+    /// Clamping is performed.
+    /// @param[in]  rhs - The color to add to this color.
+    /// @return The updated color after addition.
+    Color& Color::operator+=(const Color& rhs)
+    {
+        // ADD THE COLOR COMPONENTS.
+        Red += rhs.Red;
+        Green += rhs.Green;
+        Blue += rhs.Blue;
+        Alpha += rhs.Alpha;
+
+        // Clamping is performed to keep them within the valid range,
+        // which is particularly important to avoid weird issues with the alpha channel.
+        Clamp();
+
+        // RETURN THE UPDATED COLOR.
+        return (*this);
     }
 
     /// Returns the red component in 32-bit floating-point format.
@@ -224,5 +287,15 @@ namespace GRAPHICS
         // CAST THE SCALED COLOR COMPONENT TO AN 8-BIT INTEGER.
         uint8_t color_component_as_uint8 = static_cast<uint8_t>(scaled_color_component);
         return color_component_as_uint8;
+    }
+
+    /// Clamps all color components to the valid range,
+    /// which needs to be done after many operations.
+    void Color::Clamp()
+    {
+        Red = MATH::Number::Clamp(Red, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
+        Green = MATH::Number::Clamp(Green, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
+        Blue = MATH::Number::Clamp(Blue, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
+        Alpha = MATH::Number::Clamp(Alpha, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
     }
 }

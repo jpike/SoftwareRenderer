@@ -14,6 +14,9 @@ namespace RAY_TRACING
         // CONSTRUCTION.
         explicit PointLight(const MATH::Vector3f& world_position, const GRAPHICS::Color& color);
         
+        // OTHER PUBLIC METHODS.
+        MATH::Vector3f DirectionFrom(const MATH::Vector3f& other_world_position) const;
+
         // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
         /// The world position of the light.
         MATH::Vector3f WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
