@@ -274,11 +274,11 @@ int CALLBACK WinMain(
     scene.PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
         MATH::Vector3f(4.0f, 4.0f, 8.0f),
         GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
-    scene.BackgroundColor = GRAPHICS::Color(0.3f, 0.3f, 0.7f, 0.0f);
+    scene.BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
 
     GRAPHICS::RAY_TRACING::Material material;
     material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-    material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+    material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
     material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
     material.SpecularPower = 1.0f;
     material.KReflected = 0.0f;
