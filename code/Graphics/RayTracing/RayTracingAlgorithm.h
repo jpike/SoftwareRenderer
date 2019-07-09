@@ -26,6 +26,13 @@ namespace RAY_TRACING
 
         GRAPHICS::RAY_TRACING::Camera Camera = GRAPHICS::RAY_TRACING::Camera();
 
+        bool Ambient = true;
+        bool Shadows = true;
+        bool Diffuse = true;
+        bool Specular = true;
+        bool Reflections = true;
+        unsigned int ReflectionCount = 5;
+
     private:
         std::optional<RayObjectIntersection> ComputeClosestIntersection(
             const Scene& scene,
