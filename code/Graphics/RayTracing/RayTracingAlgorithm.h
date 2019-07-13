@@ -18,22 +18,32 @@ namespace RAY_TRACING
     class RayTracingAlgorithm
     {
     public:
+        // PUBLIC METHODS.
         void Render(const Scene& scene, GRAPHICS::RenderTarget& render_target);
+
+        // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
+        /// The camera used for rendering.
+        GRAPHICS::RAY_TRACING::Camera Camera = GRAPHICS::RAY_TRACING::Camera();
+        /// True if ambient lighting should be calculated; false otherwise.
+        bool Ambient = true;
+        /// True if shadows should be calculated; false otherwise.
+        bool Shadows = true;
+        /// True if diffuse shading should be calculated; false otherwise.
+        bool Diffuse = true;
+        /// True if specular shading should be calculated; false otherwise.
+        bool Specular = true;
+        /// True if reflections should be calculated; false otherwise.
+        bool Reflections = true;
+        /// The maximum number of reflections to computer (if reflections are enabled).
+        /// More reflections will take longer to render an image.
+        unsigned int ReflectionCount = 5;
+
+    private:
+        // PRIVATE HELPER METHODS.
         GRAPHICS::Color ComputeColor(
             const Scene& scene,
             const RayObjectIntersection& intersection,
             const unsigned int remaining_reflection_count) const;
-
-        GRAPHICS::RAY_TRACING::Camera Camera = GRAPHICS::RAY_TRACING::Camera();
-
-        bool Ambient = true;
-        bool Shadows = true;
-        bool Diffuse = true;
-        bool Specular = true;
-        bool Reflections = true;
-        unsigned int ReflectionCount = 5;
-
-    private:
         std::optional<RayObjectIntersection> ComputeClosestIntersection(
             const Scene& scene,
             const Ray& ray,

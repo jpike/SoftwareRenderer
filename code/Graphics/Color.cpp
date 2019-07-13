@@ -43,10 +43,10 @@ namespace GRAPHICS
 
     /// Scales the color by the specified factor, performing clamping.
     /// Only red, green, and blue components are scaled (alpha is left alone).
-    /// @param[in]  color - The original color to scale.
     /// @param[in]  scale_factor - The scaling factor to multiply the color by.
+    /// @param[in]  color - The original color to scale.
     /// @return A copy of the color scaled as specified.
-    Color Color::ScaleRedGreenBlue(const Color& color, const float& scale_factor)
+    Color Color::ScaleRedGreenBlue(const float scale_factor, const Color& color)
     {
         // COPY THE COLOR FOR MODIFICATIONS.
         Color scaled_color = color;

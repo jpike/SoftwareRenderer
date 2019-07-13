@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <memory>
+#include <random>
 #include <string>
 #include <thread>
 #include <vector>
@@ -17,7 +18,7 @@
 #include "Graphics/Triangle.h"
 #include "Windowing/Win32Window.h"
 
-#define USE_RAY_TRACING 1
+#define USE_RAY_TRACING 0
 
 // GLOBALS.
 // Global to provide access to them within the window procedure.
@@ -36,59 +37,297 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
 {
     switch (scene_number)
     {
-        case 0:
+    case 0:
+    {
+        // BASIC TRIANGLE.
+        auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(0.0f, 0.0f, 0.0f),
+            GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
+        scene->BackgroundColor = GRAPHICS::Color(0.3f, 0.3f, 0.7f, 0.0f);
+
+        GRAPHICS::RAY_TRACING::Material material;
+        material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+        material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+        material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+        material.SpecularPower = 1.0f;
+        material.ReflectivityProportion = 0.0f;
+
+        auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
         {
-            // BASIC TRIANGLE.
-            auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(0.0f, 0.0f, 0.0f),
-                GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
-            scene->BackgroundColor = GRAPHICS::Color(0.3f, 0.3f, 0.7f, 0.0f);
+            MATH::Vector3f(-1.0f, -1.0f, -2.0f),
+            MATH::Vector3f(1.0f, -1.0f, -2.0f),
+            MATH::Vector3f(0.0f, 1.0f, -2.0f),
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
+        return scene;
+    }
+    case 1:
+    {
+        // MULTIPLE TRIANGLES.
+        auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(4.0f, 4.0f, 8.0f),
+            GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
+        scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
 
-            GRAPHICS::RAY_TRACING::Material material;
-            material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-            material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            material.SpecularPower = 1.0f;
-            material.KReflected = 0.0f;
+        GRAPHICS::RAY_TRACING::Material material;
+        material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+        material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+        material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+        material.SpecularPower = 1.0f;
+        material.ReflectivityProportion = 0.0f;
 
-            auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
-            triangle->Vertices =
-            {
-                MATH::Vector3f(-1.0f, -1.0f, -2.0f),
-                MATH::Vector3f(1.0f, -1.0f, -2.0f),
-                MATH::Vector3f(0.0f, 1.0f, -2.0f),
-            };
-            triangle->Material = material;
-            scene->Objects.push_back(std::move(triangle));
-            return scene;
-        }
-        case 1:
+        auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
         {
-            auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(8.0f, 0.0f, 0.0f),
-                GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
-            scene->BackgroundColor = GRAPHICS::Color::BLACK;
+            MATH::Vector3f(-0.1f, -0.1f, -2.0f),
+            MATH::Vector3f(0.1f, -0.1f, -2.0f),
+            MATH::Vector3f(0.0f, 0.1f, -2.0f),
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
 
-            // SPHERE.
-            GRAPHICS::RAY_TRACING::Material sphere_material;
-            sphere_material.DiffuseColor = GRAPHICS::Color(0.5f, 0.0f, 0.5f, 1.0f);
-            sphere_material.AmbientColor = GRAPHICS::Color(0.2f, 0.0f, 0.0f, 1.0f);
-            sphere_material.SpecularColor = GRAPHICS::Color(0.0f, 0.5f, 0.0f, 1.0f);
-            sphere_material.SpecularPower = 10.0f;
-            sphere_material.KReflected = 0.0f;
+        triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
+        {
+            MATH::Vector3f(-0.9f, -0.9f, -2.0f),
+            MATH::Vector3f(0.7f, -0.7f, -2.0f),
+            MATH::Vector3f(-0.7f, -0.6f, -2.0f),
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
 
-            auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
-            sphere->CenterPosition = MATH::Vector3f(0.0f, 0.0f, -4.0f);
-            sphere->Radius = 1.0f;
-            sphere->Material = sphere_material;
-            scene->Objects.push_back(std::move(sphere));
+        triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
+        {
+            MATH::Vector3f(0.5f, -0.5f, -2.0f),
+            MATH::Vector3f(0.8f, -0.7f, -2.0f),
+            MATH::Vector3f(0.6f, 0.6f, -2.0f),
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
+        
+        return scene;
+    }
+    case 2:
+    {
+        auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(4.0f, 4.0f, 8.0f),
+            GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
+        scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
 
-            return scene;
-        }
-        default:
-            return nullptr;
+        // TRIANLGE + SPHERE.
+        GRAPHICS::RAY_TRACING::Material material;
+        material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+        material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+        material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+        material.SpecularPower = 1.0f;
+        material.ReflectivityProportion = 0.0f;
+
+        auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
+        {
+            MATH::Vector3f(-1.0f, -1.0f, -3.0f),
+            MATH::Vector3f(1.0f, -1.0f, -3.0f),
+            MATH::Vector3f(0.0f, 1.0f, -3.0f),
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
+
+        // SPHERE.
+        GRAPHICS::RAY_TRACING::Material sphere_material;
+        sphere_material.DiffuseColor = GRAPHICS::Color(0.8f, 0.2f, 0.7f, 1.0f);
+        sphere_material.AmbientColor = GRAPHICS::Color(0.3f, 0.1f, 0.6f, 1.0f);
+        sphere_material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+        sphere_material.SpecularPower = 1.0f;
+        sphere_material.ReflectivityProportion = 0.0f;
+
+        auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
+        sphere->CenterPosition = MATH::Vector3f(0.0f, 0.0f, -3.0f);
+        sphere->Radius = 0.87f;
+        sphere->Material = sphere_material;
+
+        scene->Objects.push_back(std::move(sphere));
+
+        return scene;
+    }
+    case 3:
+    {
+        // MULTIPLE LIGHTS.
+        auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(3.0f, 4.0f, 0.0f),
+            GRAPHICS::Color(0.9f, 0.0f, 0.0f, 1.0f)));
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(-4.0f, 5.0f, 0.0f),
+            GRAPHICS::Color(0.0f, 0.9f, 0.0f, 1.0f)));
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(0.0f, 4.0f, -5.0f),
+            GRAPHICS::Color(0.0f, 0.0f, 0.9f, 1.0f)));
+        scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
+
+        // Ground plane.
+        GRAPHICS::RAY_TRACING::Material material;
+        material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+        material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+        material.SpecularColor = GRAPHICS::Color(0.1f, 0.1f, 0.1f, 1.0f);
+        material.SpecularPower = 1.0f;
+        material.ReflectivityProportion = 0.5f;
+
+        auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
+        {
+            MATH::Vector3f(-100.0f, -1.0f, -100.0f),
+            MATH::Vector3f(100.0f, -1.0f, 100.0f),
+            MATH::Vector3f(100.0f, -1.0f, -100.0f)
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
+
+        triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
+        {
+            MATH::Vector3f(100.0f, -1.0f, 100.0f),
+            MATH::Vector3f(-100.0f, -1.0f, -100.0f),
+            MATH::Vector3f(-100.0f, -1.0f, 100.0f)
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
+
+        // SPHERE.
+        GRAPHICS::RAY_TRACING::Material sphere_material;
+        sphere_material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+        sphere_material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+        sphere_material.SpecularColor = GRAPHICS::Color(0.1f, 0.1f, 0.1f, 1.0f);
+        sphere_material.SpecularPower = 1.0f;
+        sphere_material.ReflectivityProportion = 0.5f;
+
+        auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
+        sphere->CenterPosition = MATH::Vector3f(0.0f, 0.5f, -3.0f);
+        sphere->Radius = 0.7f;
+        sphere->Material = sphere_material;
+
+        scene->Objects.push_back(std::move(sphere));
+
+        return scene;
+    }
+    case 4:
+    {
+        // MULTIPLE REFLECTIVE SPHERES.
+        auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(8.0f, 8.0f, 3.0f),
+            GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(-4.0f, 2.0f, 0.0f),
+            GRAPHICS::Color(0.3f, 0.3f, 0.3f, 1.0f)));
+        scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
+
+        // Ground plane.
+        GRAPHICS::RAY_TRACING::Material material;
+        material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+        material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+        material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+        material.SpecularPower = 1.0f;
+        material.ReflectivityProportion = 0.5f;
+
+        auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
+        {
+            MATH::Vector3f(-100.0f, -1.0f, -100.0f),
+            MATH::Vector3f(100.0f, -1.0f, 100.0f),
+            MATH::Vector3f(100.0f, -1.0f, -100.0f)
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
+
+        triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+        triangle->Vertices =
+        {
+            MATH::Vector3f(100.0f, -1.0f, 100.0f),
+            MATH::Vector3f(-100.0f, -1.0f, -100.0f),
+            MATH::Vector3f(-100.0f, -1.0f, 100.0f)
+        };
+        triangle->Material = material;
+        scene->Objects.push_back(std::move(triangle));
+
+        // SPHERE.
+        GRAPHICS::RAY_TRACING::Material sphere_material;
+        sphere_material.DiffuseColor = GRAPHICS::Color(0.6f, 0.6f, 0.6f, 1.0f);
+        sphere_material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+        sphere_material.SpecularColor = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f);
+        sphere_material.SpecularPower = 20.0f;
+        sphere_material.ReflectivityProportion = 0.7f;
+
+        auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
+        sphere->CenterPosition = MATH::Vector3f(1.2f, 0.0f, -5.0f);
+        sphere->Radius = 1.0f;
+        sphere_material.AmbientColor = GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f);
+        sphere_material.DiffuseColor = sphere_material.AmbientColor;
+        sphere->Material = sphere_material;
+        scene->Objects.push_back(std::move(sphere));
+
+        sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
+        sphere->CenterPosition = MATH::Vector3f(0.0f, 0.3f, -1.5f);
+        sphere->Radius = 0.2f;
+        sphere_material.AmbientColor = GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f);
+        sphere_material.DiffuseColor = sphere_material.AmbientColor;
+        sphere->Material = sphere_material;
+        scene->Objects.push_back(std::move(sphere));
+
+        sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
+        sphere->CenterPosition = MATH::Vector3f(-1.0f, -0.5f, -3.0f);
+        sphere->Radius = 0.5f;
+        sphere_material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f);
+        sphere_material.DiffuseColor = sphere_material.AmbientColor;
+        sphere->Material = sphere_material;
+        scene->Objects.push_back(std::move(sphere));
+
+        return scene;
+    }
+    case 5:
+    {
+        auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
+        scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
+            MATH::Vector3f(-5.0f, 2.0f, 5.0f),
+            GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
+        scene->BackgroundColor = GRAPHICS::Color::BLACK;
+
+        // SPHERE 1.
+        GRAPHICS::RAY_TRACING::Material sphere_material;
+        sphere_material.DiffuseColor = GRAPHICS::Color(0.5f, 0.0f, 0.5f, 1.0f);
+        sphere_material.AmbientColor = GRAPHICS::Color(0.2f, 0.0f, 0.2f, 1.0f);
+        sphere_material.SpecularColor = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f);
+        sphere_material.SpecularPower = 20.0f;
+        sphere_material.ReflectivityProportion = 0.8f;
+
+        auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
+        sphere->CenterPosition = MATH::Vector3f(0.0f, 0.0f, -4.0f);
+        sphere->Radius = 1.0f;
+        sphere->Material = sphere_material;
+        scene->Objects.push_back(std::move(sphere));
+
+        // SPHERE 2.
+        sphere_material.DiffuseColor = GRAPHICS::Color(0.0f, 0.5f, 0.0f, 1.0f);
+        sphere_material.AmbientColor = GRAPHICS::Color(0.0f, 0.2f, 0.0f, 1.0f);
+        sphere_material.SpecularColor = GRAPHICS::Color(0.0f, 0.2f, 0.0f, 1.0f);
+        sphere_material.SpecularPower = 1.0f;
+        sphere_material.ReflectivityProportion = 0.0f;
+
+        sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
+        sphere->CenterPosition = MATH::Vector3f(1.0f, 0.6f, -3.0f);
+        sphere->Radius = 0.3f;
+        sphere->Material = sphere_material;
+        scene->Objects.push_back(std::move(sphere));
+
+        return scene;
+    }
+    default:
+        return nullptr;
     }
 }
 
@@ -108,150 +347,162 @@ LRESULT CALLBACK MainWindowCallback(
 
     switch (message)
     {
-        case WM_CREATE:
-            break;
-        case WM_SIZE:
-            break;
-        case WM_DESTROY:
-            break;
-        case WM_CLOSE:
+    case WM_CREATE:
+        break;
+    case WM_SIZE:
+        break;
+    case WM_DESTROY:
+        break;
+    case WM_CLOSE:
+    {
+        PostQuitMessage(EXIT_SUCCESS);
+        break;
+    }
+    case WM_ACTIVATEAPP:
+        break;
+    case WM_SYSKEYDOWN:
+        break;
+    case WM_SYSKEYUP:
+        break;
+    case WM_KEYUP:
+        break;
+    case WM_KEYDOWN:
+    {
+        const float move_speed = 0.1f;
+        int virtual_key_code = static_cast<int>(w_param);
+        switch (virtual_key_code)
         {
-            PostQuitMessage(EXIT_SUCCESS);
-            break;
-        }
-        case WM_ACTIVATEAPP:
-            break;
-        case WM_SYSKEYDOWN:
-            break;
-        case WM_SYSKEYUP:
-            break;
-        case WM_KEYUP:
-            break;
-        case WM_KEYDOWN:
-        {
-            const float move_speed = 0.1f;
-            int virtual_key_code = static_cast<int>(w_param);
-            switch (virtual_key_code)
-            {
 #if USE_RAY_TRACING
-                case VK_UP:
-                    g_ray_tracer->Camera.WorldPosition.Y += 0.1f;
-                    break;
-                case VK_DOWN:
-                    g_ray_tracer->Camera.WorldPosition.Y -= 0.1f;
-                    break;
-                case VK_LEFT:
-                    g_ray_tracer->Camera.WorldPosition.X -= 0.1f;
-                    break;
-                case VK_RIGHT:
-                    g_ray_tracer->Camera.WorldPosition.X += 0.1f;
-                    break;
-                case 0x5A: // Z
-                    g_ray_tracer->Camera.WorldPosition.Z += 0.1f;
-                    break;
-                case 0x58: // X
-                    g_ray_tracer->Camera.WorldPosition.Z -= 0.1f;
-                    break;
-                case 0x31: // 1
-                    g_ray_tracer->Camera.ViewingPlane.FocalLength += 0.1f;
-                    break;
-                case 0x32: // 2
-                    g_ray_tracer->Camera.ViewingPlane.FocalLength -= 0.1f;
-                    break;
-                case 0x30: // 0
-                    if (GRAPHICS::ProjectionType::ORTHOGRAPHIC == g_ray_tracer->Camera.Projection)
-                    {
-                        g_ray_tracer->Camera.Projection = GRAPHICS::ProjectionType::PERSPECTIVE;
-                    }
-                    else
-                    {
-                        g_ray_tracer->Camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
-                    }
-                    break;
-                case 0x51: // Q
-                    g_scene = CreateScene(0);
-                    break;
-                case 0x57: // W
-                    g_scene = CreateScene(1);
-                    break;
-                case 0x41: // A
-                    g_ray_tracer->Ambient = !g_ray_tracer->Ambient;
-                    break;
-                case 0x53: // S
-                    g_ray_tracer->Shadows = !g_ray_tracer->Shadows;
-                    break;
-                case 0x44: // D
-                    g_ray_tracer->Diffuse = !g_ray_tracer->Diffuse;
-                    break;
-                case 0x46: // F
-                    g_ray_tracer->Specular = !g_ray_tracer->Specular;
-                    break;
-                case 0x47: // G
-                    g_ray_tracer->Reflections = !g_ray_tracer->Reflections;
-                    break;
-                case 0x48: // H
-                    --g_ray_tracer->ReflectionCount;
-                    break;
-                case 0x4A: // J
-                    ++g_ray_tracer->ReflectionCount;
-                    break;
+        case VK_UP:
+            g_ray_tracer->Camera.WorldPosition.Y += 0.1f;
+            break;
+        case VK_DOWN:
+            g_ray_tracer->Camera.WorldPosition.Y -= 0.1f;
+            break;
+        case VK_LEFT:
+            g_ray_tracer->Camera.WorldPosition.X -= 0.1f;
+            break;
+        case VK_RIGHT:
+            g_ray_tracer->Camera.WorldPosition.X += 0.1f;
+            break;
+        case 0x5A: // Z
+            g_ray_tracer->Camera.WorldPosition.Z += 0.1f;
+            break;
+        case 0x58: // X
+            g_ray_tracer->Camera.WorldPosition.Z -= 0.1f;
+            break;
+        case 0x31: // 1
+            g_ray_tracer->Camera.ViewingPlane.FocalLength += 0.1f;
+            break;
+        case 0x32: // 2
+            g_ray_tracer->Camera.ViewingPlane.FocalLength -= 0.1f;
+            break;
+        case 0x30: // 0
+            if (GRAPHICS::ProjectionType::ORTHOGRAPHIC == g_ray_tracer->Camera.Projection)
+            {
+                g_ray_tracer->Camera.Projection = GRAPHICS::ProjectionType::PERSPECTIVE;
             }
+            else
+            {
+                g_ray_tracer->Camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
+            }
+            break;
+        case 0x51: // Q
+            g_scene = CreateScene(0);
+            break;
+        case 0x57: // W
+            g_scene = CreateScene(1);
+            break;
+        case 0x45: // E
+            g_scene = CreateScene(2);
+            break;
+        case 0x52: // R
+            g_scene = CreateScene(3);
+            break;
+        case 0x54: // T
+            g_scene = CreateScene(4);
+            break;
+        case 0x59: // Y
+            g_scene = CreateScene(5);
+            break;
+        case 0x41: // A
+            g_ray_tracer->Ambient = !g_ray_tracer->Ambient;
+            break;
+        case 0x53: // S
+            g_ray_tracer->Shadows = !g_ray_tracer->Shadows;
+            break;
+        case 0x44: // D
+            g_ray_tracer->Diffuse = !g_ray_tracer->Diffuse;
+            break;
+        case 0x46: // F
+            g_ray_tracer->Specular = !g_ray_tracer->Specular;
+            break;
+        case 0x47: // G
+            g_ray_tracer->Reflections = !g_ray_tracer->Reflections;
+            break;
+        case 0x48: // H
+            --g_ray_tracer->ReflectionCount;
+            break;
+        case 0x4A: // J
+            ++g_ray_tracer->ReflectionCount;
+            break;
+        }
 
-            OutputDebugString(std::to_string(g_ray_tracer->Camera.ViewingPlane.FocalLength).c_str());
-            OutputDebugString("\n");
-            g_ray_tracer->Render(*g_scene, *g_render_target);
+        OutputDebugString(std::to_string(g_ray_tracer->Camera.ViewingPlane.FocalLength).c_str());
+        OutputDebugString("\n");
+        g_ray_tracer->Render(*g_scene, *g_render_target);
 #else
-                case VK_UP:
-                    g_renderer->Camera.WorldPosition.Y += move_speed;
-                    g_renderer->Camera.LookAtWorldPosition.Y += move_speed;
-                    break;
-                case VK_DOWN:
-                    g_renderer->Camera.WorldPosition.Y -= move_speed;
-                    g_renderer->Camera.LookAtWorldPosition.Y -= move_speed;
-                    break;
-                case VK_LEFT:
-                    g_renderer->Camera.WorldPosition.X -= move_speed;
-                    g_renderer->Camera.LookAtWorldPosition.X -= move_speed;
-                    break;
-                case VK_RIGHT:
-                    g_renderer->Camera.WorldPosition.X += move_speed;
-                    g_renderer->Camera.LookAtWorldPosition.X += move_speed;
-                    break;
-                case 0x57: // W
-                    g_renderer->Camera.WorldPosition.Z -= move_speed;
-                    g_renderer->Camera.LookAtWorldPosition.Z -= move_speed;
-                    break;
-                case 0x53: // S
-                    g_renderer->Camera.WorldPosition.Z += move_speed;
-                    g_renderer->Camera.LookAtWorldPosition.Z += move_speed;
-                    break;
-            }
-
-            std::string camera_position;
-            camera_position += std::to_string(g_renderer->Camera.WorldPosition.X) + ",";
-            camera_position += std::to_string(g_renderer->Camera.WorldPosition.Y) + ",";
-            camera_position += std::to_string(g_renderer->Camera.WorldPosition.Z) + "\n";
-            OutputDebugString(camera_position.c_str());
-#endif
+        case VK_UP:
+            g_renderer->Camera.WorldPosition.Y += move_speed;
+            g_renderer->Camera.LookAtWorldPosition.Y += move_speed;
             break;
-        }
-        /// @todo case WM_SETCURSOR:
-        /// @todo break;
-        case WM_PAINT:
-        {
-            PAINTSTRUCT paint;
-            /// @todo HDC device_context = BeginPaint(window, &paint);
-            BeginPaint(window, &paint);
-
-            /// @todo   Copy rendered stuff to window here!
-
-            EndPaint(window, &paint);
+        case VK_DOWN:
+            g_renderer->Camera.WorldPosition.Y -= move_speed;
+            g_renderer->Camera.LookAtWorldPosition.Y -= move_speed;
             break;
-        }
-        default:
-            messageProcessingResult = DefWindowProcA(window, message, w_param, l_param);
+        case VK_LEFT:
+            g_renderer->Camera.WorldPosition.X -= move_speed;
+            g_renderer->Camera.LookAtWorldPosition.X -= move_speed;
+            break;
+        case VK_RIGHT:
+            g_renderer->Camera.WorldPosition.X += move_speed;
+            g_renderer->Camera.LookAtWorldPosition.X += move_speed;
+            break;
+        case 0x57: // W
+            g_renderer->Camera.WorldPosition.Z -= move_speed;
+            g_renderer->Camera.LookAtWorldPosition.Z -= move_speed;
+            break;
+        case 0x53: // S
+            g_renderer->Camera.WorldPosition.Z += move_speed;
+            g_renderer->Camera.LookAtWorldPosition.Z += move_speed;
             break;
     }
+
+        std::string camera_position;
+        camera_position += std::to_string(g_renderer->Camera.WorldPosition.X) + ",";
+        camera_position += std::to_string(g_renderer->Camera.WorldPosition.Y) + ",";
+        camera_position += std::to_string(g_renderer->Camera.WorldPosition.Z) + "\n";
+        OutputDebugString(camera_position.c_str());
+#endif
+        break;
+    }
+    /// @todo case WM_SETCURSOR:
+    /// @todo break;
+    case WM_PAINT:
+    {
+        PAINTSTRUCT paint;
+        /// @todo HDC device_context = BeginPaint(window, &paint);
+        BeginPaint(window, &paint);
+
+        /// @todo   Copy rendered stuff to window here!
+
+        EndPaint(window, &paint);
+        break;
+    }
+    default:
+        messageProcessingResult = DefWindowProcA(window, message, w_param, l_param);
+        break;
+}
 
     return messageProcessingResult;
 }
@@ -293,9 +544,9 @@ int CALLBACK WinMain(
     constexpr unsigned int SCREEN_WIDTH_IN_PIXELS = 400;
     constexpr unsigned int SCREEN_HEIGHT_IN_PIXELS = 400;
     g_window = WINDOWING::Win32Window::Create(
-        window_class, 
-        "Window Title", 
-        static_cast<int>(SCREEN_WIDTH_IN_PIXELS), 
+        window_class,
+        "Window Title",
+        static_cast<int>(SCREEN_WIDTH_IN_PIXELS),
         static_cast<int>(SCREEN_HEIGHT_IN_PIXELS));
     bool window_created = (nullptr != g_window);
     if (!window_created)
@@ -378,19 +629,45 @@ int CALLBACK WinMain(
     g_renderer->Camera.LookAtWorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
     g_renderer->Camera.UpDirection = MATH::Vector3f(0.0f, 1.0f, 0.0f);
 
-    // CREATE THE TRIANGLE TO RENDER.
+    // CREATE THE TRIANGLES TO RENDER.
+    std::random_device random_number_generator;
+    std::vector<GRAPHICS::Object3D> objects;
     GRAPHICS::Triangle triangle = GRAPHICS::Triangle::CreateEquilateral(GRAPHICS::Color::GREEN);
-    GRAPHICS::Object3D object_3D;
-    object_3D.Triangles = { triangle };
-    object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -100.0f);
+    // Can go up to about 200 triangles with some 30 FPS and some dips.
+    // 150 triangles is about the cap in which we mostly get 30 FPS,
+    // although there are still some occasional dips.
+    // At around 300 triangles, we can usually keep above 20 FPS, although there are some dips.
+    // This is all when running a debug build through Visual Studio, however.
+    constexpr std::size_t OBJECT_COUNT = 300;
+    constexpr float MIN_X_POSITION = -50.0f;
+    constexpr float MAX_X_POSITION = 50.0f;
+    constexpr float MIN_Y_POSITION = -50.0f;
+    constexpr float MAX_Y_POSITION = 50.0f;
+    while (objects.size() < OBJECT_COUNT)
+    {
+        GRAPHICS::Object3D current_object_3D;
+        current_object_3D.Triangles = { triangle };
+        constexpr float OBJECT_SCALE = 30.0f;
+        current_object_3D.Scale = MATH::Vector3f(OBJECT_SCALE, OBJECT_SCALE, OBJECT_SCALE);
+        float x_position = static_cast<float>(random_number_generator() % 150) - 75.0f;
+        float y_position = static_cast<float>(random_number_generator() % 150) - 75.0f;
+        current_object_3D.WorldPosition = MATH::Vector3f(x_position, y_position, -100.0f);
+        objects.push_back(current_object_3D);
+    }
+
+    objects.clear();
+    GRAPHICS::Object3D test_object_3D;
+    test_object_3D.Triangles = { triangle };
     constexpr float OBJECT_SCALE = 50.0f;
-    object_3D.Scale = MATH::Vector3f(OBJECT_SCALE, OBJECT_SCALE, OBJECT_SCALE);
+    test_object_3D.Scale = MATH::Vector3f(OBJECT_SCALE, OBJECT_SCALE, OBJECT_SCALE);
+    test_object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -100.0f);
+    objects.push_back(test_object_3D);
 
     // RUN A MESSAGE LOOP.
     constexpr float TARGET_FRAMES_PER_SECOND = 60.0f;
     constexpr std::chrono::duration<float, std::chrono::seconds::period> TARGET_SECONDS_PER_FRAME(1.0f / TARGET_FRAMES_PER_SECOND);
 
-#define ROTATE_TRIANGLE 1
+#define ROTATE_TRIANGLE 0
 #if ROTATE_TRIANGLE
     float angle_in_radians = 0.0f;
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -439,14 +716,20 @@ int CALLBACK WinMain(
         auto current_time = std::chrono::high_resolution_clock::now();
         auto total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - start_time).count();
         angle_in_radians = 0.5f * total_elapsed_time;
-        object_3D.RotationInRadians.X = MATH::Angle<float>::Radians(angle_in_radians);
-        object_3D.RotationInRadians.Y = MATH::Angle<float>::Radians(angle_in_radians);
-        object_3D.RotationInRadians.Z = MATH::Angle<float>::Radians(angle_in_radians);
+        for (auto& object_3D : objects)
+        {
+            object_3D.RotationInRadians.X = MATH::Angle<float>::Radians(angle_in_radians);
+            object_3D.RotationInRadians.Y = MATH::Angle<float>::Radians(angle_in_radians);
+            object_3D.RotationInRadians.Z = MATH::Angle<float>::Radians(angle_in_radians);
+        }
 #endif
 
         render_target.FillPixels(GRAPHICS::Color::BLACK);
 
-        g_renderer->Render(object_3D, render_target);
+        for (auto object_3D : objects)
+        {
+            g_renderer->Render(object_3D, render_target);
+        }
 
         g_window->Display(render_target);
 
@@ -456,11 +739,11 @@ int CALLBACK WinMain(
         auto frame_elapsed_time = frame_end_time - frame_start_time;
 
         auto frame_elapsed_time_milliseconds = std::chrono::duration_cast<
-            std::chrono::duration<float, std::chrono::milliseconds::period> >(frame_elapsed_time);
+            std::chrono::duration<float, std::chrono::milliseconds::period>>(frame_elapsed_time);
         std::string frame_elapsed_time_milliseconds_string = std::to_string(frame_elapsed_time_milliseconds.count()) + " ms\t";
         //OutputDebugStringA(frame_elapsed_time_milliseconds_string.c_str());
         auto frame_elapsed_time_seconds = std::chrono::duration_cast<
-            std::chrono::duration<float, std::chrono::seconds::period> >(frame_elapsed_time);
+            std::chrono::duration<float, std::chrono::seconds::period>>(frame_elapsed_time);
         std::string frame_elapsed_time_seconds_string = std::to_string(frame_elapsed_time_seconds.count()) + " s\t";
         //OutputDebugStringA(frame_elapsed_time_seconds_string.c_str());
         float frames_per_second = 1.0f / frame_elapsed_time_seconds.count();
@@ -479,13 +762,13 @@ int CALLBACK WinMain(
         frame_end_time = std::chrono::high_resolution_clock::now();
         //float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - frame_start_time).count();
         frame_elapsed_time = frame_end_time - frame_start_time;
-        
+
         frame_elapsed_time_milliseconds = std::chrono::duration_cast<
-            std::chrono::duration<float, std::chrono::milliseconds::period> >(frame_elapsed_time);
+            std::chrono::duration<float, std::chrono::milliseconds::period>>(frame_elapsed_time);
         frame_elapsed_time_milliseconds_string = std::to_string(frame_elapsed_time_milliseconds.count()) + " ms\t";
         OutputDebugStringA(frame_elapsed_time_milliseconds_string.c_str());
         frame_elapsed_time_seconds = std::chrono::duration_cast<
-            std::chrono::duration<float, std::chrono::seconds::period> >(frame_elapsed_time);
+            std::chrono::duration<float, std::chrono::seconds::period>>(frame_elapsed_time);
         frame_elapsed_time_seconds_string = std::to_string(frame_elapsed_time_seconds.count()) + " s\t";
         OutputDebugStringA(frame_elapsed_time_seconds_string.c_str());
         frames_per_second = 1.0f / frame_elapsed_time_seconds.count();

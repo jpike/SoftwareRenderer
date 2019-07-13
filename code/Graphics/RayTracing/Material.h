@@ -10,11 +10,16 @@ namespace RAY_TRACING
     class Material
     {
     public:
-        GRAPHICS::Color DiffuseColor = GRAPHICS::Color::BLACK;
+        /// The ambient color of the material.
         GRAPHICS::Color AmbientColor = GRAPHICS::Color::BLACK;
+        /// The diffuse color of the material.
+        GRAPHICS::Color DiffuseColor = GRAPHICS::Color::BLACK;
+        /// The specular color of the material.
         GRAPHICS::Color SpecularColor = GRAPHICS::Color::BLACK;
+        /// The specular power defining the shininess of specular highlights.
         float SpecularPower = 0.0f;
-        float KReflected = 0.0f;
+        /// How reflective the material is as a proportion from [0, 1].
+        float ReflectivityProportion = 0.0f;
     };
 }
 }

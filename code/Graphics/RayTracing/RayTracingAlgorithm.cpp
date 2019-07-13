@@ -59,7 +59,7 @@ namespace RAY_TRACING
         // INITIALIZE THE COLOR TO HAVE NO CONTRIBUTION FROM ANY SOURCES.
         Color final_color = Color::BLACK;
 
-        // ADD IN THE AMBIENT COLOR.
+        // ADD IN THE AMBIENT COLOR IF ENABLED.
         const Material& intersected_material = intersection.Object->GetMaterial();
         if (Ambient)
         {
@@ -71,55 +71,70 @@ namespace RAY_TRACING
         MATH::Vector3f intersection_point = intersection.IntersectionPoint();
         for (const PointLight& light : scene.PointLights)
         {
-            // CAST A RAY OUT TO COMPUTE SHADOWS.
-            float shadow_factor = 1.0f;
+            // CAST A RAY OUT TO COMPUTE SHADOWS IF ENABLED.
+            // To simplify later parts of the algorithm, a shadow factor of 1 (no shadowing)
+            // should always be computed.
+            constexpr float NO_SHADOWING = 1.0f;
+            float shadow_factor = NO_SHADOWING;
             if (Shadows)
             {
-                //MATH::Vector3f unit_direction_from_point_to_light = light.DirectionFrom(intersection_point);
-                MATH::Vector3f direction_from_point_to_light = light.WorldPosition - intersection_point;
+                // SHOOT A SHADOW RAY OUT FROM THE INTERSECTION POINT TO THE LIGHT.
+                MATH::Vector3f direction_from_point_to_light = light.DirectionFrom(intersection_point);
                 Ray shadow_ray(intersection_point, direction_from_point_to_light);
                 std::optional<RayObjectIntersection> shadow_intersection = ComputeClosestIntersection(scene, shadow_ray, intersection.Object);
                 if (shadow_intersection)
                 {
-                    bool shadow_intersection_in_range = (shadow_intersection->DistanceFromRayToObject > 0.0f) && (shadow_intersection->DistanceFromRayToObject < 1.0f);
+                    // DETERMINE THE SHADOW FACTOR BASED ON THE INTERSECTION.
+                    // For a shadow to occur, the intersection with another object must occur in front of the shadow ray.
+                    // Similarly, the intersection must occur before the ray hits the light (hence why the shadow ray
+                    // is computed with a direction that is not unit length but the full length from the intersection
+                    // point to the light - it makes checking for the distance to the light easier).
+                    constexpr float NO_DISTANCE_IN_FRONT_OF_SHADOW_RAY = 0.0f;
+                    constexpr float DISTANCE_AT_LIGHT = 1.0f;
+                    bool shadow_intersection_in_range = (
+                        (NO_DISTANCE_IN_FRONT_OF_SHADOW_RAY < shadow_intersection->DistanceFromRayToObject) &&
+                        (shadow_intersection->DistanceFromRayToObject < DISTANCE_AT_LIGHT));
                     if (shadow_intersection_in_range)
                     {
-                        shadow_factor = 0.0f;
+                        constexpr float FULL_SHADOWING = 0.0f;
+                        shadow_factor = FULL_SHADOWING;
                     }
                     else
                     {
-                        shadow_factor = 1.0f;
+                        shadow_factor = NO_SHADOWING;
                     }
                 }
             }
 
+            // STORE THE SHADOW FACTOR FOR THE LIGHT.
             shadow_factors_by_light_index.push_back(shadow_factor);
         }
 
-        // ADD IN DIFFUSE COLOR FROM LIGHTS.
+        // ADD IN DIFFUSE COLOR FROM LIGHTS IF ENABLED.
         MATH::Vector3f unit_surface_normal = intersection.Object->SurfaceNormal(intersection_point);
         if (Diffuse)
         {
+            // ADD DIFFUSE CONTRIBUTIONS FROM ALL LIGHT SOURCES.
             Color light_total_color = Color::BLACK;
             for (std::size_t light_index = 0; light_index < scene.PointLights.size(); ++light_index)
             {
-                const PointLight& light = scene.PointLights.at(light_index);
-
                 // ADD COLOR FROM THE CURRENT LIGHT.
                 // This is based on the Lambertian shading model.
                 // An object is maximally illuminated when facing toward the light.
                 // An object tangent to the light direction or facing away receives no illumination.
                 // In-between, the amount of illumination is proportional to the cosine of the angle between
                 // the light and surface normal (where the cosine can be computed via the dot product).
-                MATH::Vector3f unit_direction_from_point_to_light = light.DirectionFrom(intersection_point);
+                const PointLight& light = scene.PointLights.at(light_index);
+                MATH::Vector3f direction_from_point_to_light = light.DirectionFrom(intersection_point);
+                MATH::Vector3f unit_direction_from_point_to_light = MATH::Vector3f::Normalize(direction_from_point_to_light);
                 constexpr float NO_ILLUMINATION = 0.0f;
                 float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
                 illumination_proportion = std::max(NO_ILLUMINATION, illumination_proportion);
 
                 // ADD THE CURRENT LIGHT'S COLOR.
                 float shadow_factor = shadow_factors_by_light_index.at(light_index);
-                Color current_light_color = Color::ScaleRedGreenBlue(light.Color, illumination_proportion);
-                current_light_color = Color::ScaleRedGreenBlue(current_light_color, shadow_factor);
+                Color current_light_color = Color::ScaleRedGreenBlue(illumination_proportion, light.Color);
+                current_light_color = Color::ScaleRedGreenBlue(shadow_factor, current_light_color);
                 light_total_color += current_light_color;
             }
 
@@ -130,23 +145,20 @@ namespace RAY_TRACING
             final_color += diffuse_color;
         }
 
-        // ADD IN SPECULAR COLOR.
+        // ADD IN SPECULAR COLOR IF ENABLED.
+        // This is based on the Blinn-Phong model.
         if (Specular)
         {
+            // ADD SPECULAR CONTRIBUTIONS FROM ALL LIGHT SOURCES.
             Color specular_light_total_color = Color::BLACK;
             MATH::Vector3f ray_from_intersection_to_eye = intersection.Ray->Origin - intersection_point;
             MATH::Vector3f normalized_ray_from_intersection_to_eye = MATH::Vector3f::Normalize(ray_from_intersection_to_eye);
             for (std::size_t light_index = 0; light_index < scene.PointLights.size(); ++light_index)
             {
-                const PointLight& light = scene.PointLights.at(light_index);
-
                 // COMPUTE THE AMOUNT OF ILLUMINATION FROM THE CURRENT LIGHT.
-                // This is based on the Lambertian shading model.
-                // An object is maximally illuminated when facing toward the light.
-                // An object tangent to the light direction or facing away receives no illumination.
-                // In-between, the amount of illumination is proportional to the cosine of the angle between
-                // the light and surface normal (where the cosine can be computed via the dot product).
-                MATH::Vector3f unit_direction_from_point_to_light = light.DirectionFrom(intersection_point);
+                const PointLight& light = scene.PointLights.at(light_index);
+                MATH::Vector3f direction_from_point_to_light = light.DirectionFrom(intersection_point);
+                MATH::Vector3f unit_direction_from_point_to_light = MATH::Vector3f::Normalize(direction_from_point_to_light);
                 constexpr float NO_ILLUMINATION = 0.0f;
                 float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
                 illumination_proportion = std::max(NO_ILLUMINATION, illumination_proportion);
@@ -163,10 +175,12 @@ namespace RAY_TRACING
 
                 // ADD THE CURRENT LIGHT'S SPECULAR COLOR.
                 float shadow_factor = shadow_factors_by_light_index.at(light_index);
-                Color current_light_specular_color = Color::ScaleRedGreenBlue(light.Color, shadow_factor * specular_proportion);
+                float light_proportion = shadow_factor * specular_proportion;
+                Color current_light_specular_color = Color::ScaleRedGreenBlue(light_proportion, light.Color);
                 specular_light_total_color += current_light_specular_color;
             }
 
+            // The specular color is multiplied component-wise by the amount of light.
             Color specular_color = Color::ComponentMultiplyRedGreenBlue(
                 intersected_material.SpecularColor,
                 specular_light_total_color);
@@ -176,16 +190,17 @@ namespace RAY_TRACING
         // COMPUTE REFLECTED LIGHT IF POSSIBLE.
         if (Reflections)
         {
-            /// @todo   Change KReflected name.
+            // CHECK IF THE RAY CAN BE REFLECTED.
             // In addition to the remaining reflections, there's no need to compute
             // color from reflected light in the material isn't reflective.
-            bool ray_can_be_reflected = (remaining_reflection_count > 0) && (intersected_material.KReflected > 0.0f);
+            bool ray_can_be_reflected = (remaining_reflection_count > 0) && (intersected_material.ReflectivityProportion > 0.0f);
             if (!ray_can_be_reflected)
             {
                 // RETURN THE COLOR AS-IS.
                 return final_color;
             }
 
+            // COMPUTE THE REFLECTED RAY.
             MATH::Vector3f direction_from_ray_origin_to_intersection = intersection_point - intersection.Ray->Origin;
             MATH::Vector3f normalized_direction_from_ray_origin_to_intersection = MATH::Vector3f::Normalize(direction_from_ray_origin_to_intersection);
             float length_of_ray_along_surface_normal = MATH::Vector3f::DotProduct(normalized_direction_from_ray_origin_to_intersection, unit_surface_normal);
@@ -194,20 +209,21 @@ namespace RAY_TRACING
             MATH::Vector3f reflected_ray_direction = normalized_direction_from_ray_origin_to_intersection - twice_reflected_ray_along_surface_normal;
             MATH::Vector3f normalized_reflected_ray_direction = MATH::Vector3f::Normalize(reflected_ray_direction);
             Ray reflected_ray(intersection_point, normalized_reflected_ray_direction);
+
+            // CHECK FOR ANY INTERSECTIONS FROM THE REFLECTED RAY.
             std::optional<RayObjectIntersection> reflected_intersection = ComputeClosestIntersection(scene, reflected_ray, intersection.Object);
             if (reflected_intersection)
             {
                 // COMPUTE THE REFLECTED COLOR.
                 const unsigned int child_reflection_count = remaining_reflection_count - 1;
                 Color raw_reflected_color = ComputeColor(scene, *reflected_intersection, child_reflection_count);
-                /// @todo   Re-examine API ordering.
-                Color reflected_color = Color::ScaleRedGreenBlue(raw_reflected_color, intersected_material.KReflected);
+                Color reflected_color = Color::ScaleRedGreenBlue(intersected_material.ReflectivityProportion, raw_reflected_color);
                 final_color += reflected_color;
             }
             else
             {
                 // ADD REFLECTED LIGHT CONTRIBUTED FROM THE BACKGROUND.
-                Color reflected_color = Color::ScaleRedGreenBlue(scene.BackgroundColor, intersected_material.KReflected);
+                Color reflected_color = Color::ScaleRedGreenBlue(intersected_material.ReflectivityProportion, scene.BackgroundColor);
                 final_color += reflected_color;
             }
         }

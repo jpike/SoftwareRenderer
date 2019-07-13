@@ -24,7 +24,7 @@ namespace GRAPHICS
 
         // CONSTRUCTION.
         static Color Unpack(const uint32_t packed_color, const ColorFormat color_format);
-        static Color ScaleRedGreenBlue(const Color& color, const float& scale_factor);
+        static Color ScaleRedGreenBlue(const float scale_factor, const Color& color);
         static Color ComponentMultiplyRedGreenBlue(const Color& color_1, const Color& color_2);
         explicit Color(
             const float red,
