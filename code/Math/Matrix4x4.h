@@ -290,7 +290,7 @@ namespace MATH
 
         // CALCULATE THE W COMPONENT OF THE VECTOR.
         const unsigned int ROW_4 = 3;
-        transformed_vector.Z =
+        transformed_vector.W =
             (this->Elements(COLUMN_1, ROW_4) * vector.X) +
             (this->Elements(COLUMN_2, ROW_4) * vector.Y) +
             (this->Elements(COLUMN_3, ROW_4) * vector.Z) +
