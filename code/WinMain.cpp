@@ -655,19 +655,22 @@ int CALLBACK WinMain(
         objects.push_back(current_object_3D);
     }
 
+#define SINGLE_TRIANGLE 0
+#if SINGLE_TRIANGLE
     objects.clear();
     GRAPHICS::Object3D test_object_3D;
     test_object_3D.Triangles = { triangle };
     constexpr float OBJECT_SCALE = 50.0f;
     test_object_3D.Scale = MATH::Vector3f(OBJECT_SCALE, OBJECT_SCALE, OBJECT_SCALE);
-    test_object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -100.0f);
+    test_object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -2.0f);
     objects.push_back(test_object_3D);
+#endif
 
     // RUN A MESSAGE LOOP.
     constexpr float TARGET_FRAMES_PER_SECOND = 60.0f;
     constexpr std::chrono::duration<float, std::chrono::seconds::period> TARGET_SECONDS_PER_FRAME(1.0f / TARGET_FRAMES_PER_SECOND);
 
-#define ROTATE_TRIANGLE 0
+#define ROTATE_TRIANGLE 1
 #if ROTATE_TRIANGLE
     float angle_in_radians = 0.0f;
     auto start_time = std::chrono::high_resolution_clock::now();

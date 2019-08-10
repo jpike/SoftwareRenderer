@@ -50,7 +50,7 @@ namespace GRAPHICS
             0.0f));
         MATH::Matrix4x4 screen_transform = translate_to_screen_center_transform * scale_to_screen_transform * flip_y_transform;
 
-        MATH::Matrix4x4f final_transform = screen_transform * orthographic_projection_transform * camera_view_transform * object_world_transform;
+        MATH::Matrix4x4f final_transform = screen_transform * perspective_projection_transform * camera_view_transform * object_world_transform;
 
         // RENDER EACH TRIANGLE OF THE OBJECT.
         for (const auto& local_triangle : object_3D.Triangles)
@@ -68,9 +68,11 @@ namespace GRAPHICS
 
                 vertex += object_3D.WorldPosition;*/
 
+                vertex.Y = -vertex.Y;
                 MATH::Vector4f homogeneous_vertex = MATH::Vector4f::HomogeneousPositionVector(vertex);
                 MATH::Vector4f transformed_vertex = final_transform * homogeneous_vertex;
                 vertex = MATH::Vector3f(transformed_vertex.X, transformed_vertex.Y, transformed_vertex.Z);
+                vertex = MATH::Vector3f::Scale(1.0f / transformed_vertex.W, vertex);
                 /// @todo   Flip Y more properly.
                 //vertex.Y = -vertex.Y;
             }

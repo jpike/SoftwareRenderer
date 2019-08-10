@@ -74,8 +74,6 @@ namespace GRAPHICS
         const float far_z_world_boundary)
     {
         // CREATE THE BASIC PERSPECTIVE MATRIX.
-        /// @todo   I'm not sure how correct this code is.  Once more robust features are
-        /// implemented to more completely test this, it should be tested more thoroughly.
         MATH::Matrix4x4f perspective_matrix;
         // Multiples the x/y coordinates by the near z world boundary so that the x/y coordinates
         // can be properly scaled relative to the near plain and the corresponding z coordinate.
@@ -84,8 +82,8 @@ namespace GRAPHICS
         // Ensures that points on the near and far z planes are left alone in terms of the z coordinate.
         perspective_matrix.Elements(2, 2) = near_z_world_boundary + far_z_world_boundary;
         perspective_matrix.Elements(3, 2) = -far_z_world_boundary * near_z_world_boundary;
-        // Helps preserve the z coordinate while accounting for the distance to the near z plane.
-        perspective_matrix.Elements(2, 3) = -1.0f / near_z_world_boundary;
+        // Helps preserve the z coordinate.
+        perspective_matrix.Elements(2, 3) = 1.0f;
 
         // CREATE THE ORTHOGRAPHIC MATRIX.
         // The tangent function requires the field of view in radians.
@@ -111,7 +109,7 @@ namespace GRAPHICS
             far_z_world_boundary);
 
         // COMPUTE THE FULL PERSPECTIVE PROJECTION MATRIX.
-        MATH::Matrix4x4f perspective_projection_matrix = perspective_matrix * orthographic_matrix;
+        MATH::Matrix4x4f perspective_projection_matrix = orthographic_matrix * perspective_matrix;
 
         return perspective_projection_matrix;
     }

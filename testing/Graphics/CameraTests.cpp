@@ -70,19 +70,19 @@ TEST_CASE("Perspective projection projects camera space coordinates correctly.",
     MATH::Vector4f projected_right_coordinate = perspective_projection * camera_space_right_coordinate;
 
     // VERIFY THE TRANSFORMED COORDINATES.
-    const MATH::Vector4f EXPECTED_PROJECTED_TOP_COORDINATE(0.0f, 1.0f, 1.0f, -1.0f);
+    const MATH::Vector4f EXPECTED_PROJECTED_TOP_COORDINATE(0.0f, 1.0f, 3.0404f, -1.0f);
     REQUIRE(EXPECTED_PROJECTED_TOP_COORDINATE.X == Approx(projected_top_coordinate.X));
     REQUIRE(EXPECTED_PROJECTED_TOP_COORDINATE.Y == Approx(projected_top_coordinate.Y));
     REQUIRE(EXPECTED_PROJECTED_TOP_COORDINATE.Z == Approx(projected_top_coordinate.Z));
     REQUIRE(EXPECTED_PROJECTED_TOP_COORDINATE.W == Approx(projected_top_coordinate.W));
 
-    const MATH::Vector4f EXPECTED_PROJECTED_LEFT_COORDINATE(1.0f, 0.0f, 1.0f, -1.0f);
+    const MATH::Vector4f EXPECTED_PROJECTED_LEFT_COORDINATE(1.0f, 0.0f, 3.0404f, -1.0f);
     REQUIRE(EXPECTED_PROJECTED_LEFT_COORDINATE.X == Approx(projected_left_coordinate.X));
     REQUIRE(EXPECTED_PROJECTED_LEFT_COORDINATE.Y == Approx(projected_left_coordinate.Y));
     REQUIRE(EXPECTED_PROJECTED_LEFT_COORDINATE.Z == Approx(projected_left_coordinate.Z));
     REQUIRE(EXPECTED_PROJECTED_LEFT_COORDINATE.W == Approx(projected_left_coordinate.W));
 
-    const MATH::Vector4f EXPECTED_PROJECTED_RIGHT_COORDINATE(-1.0f, 0.0f, 1.0f, -1.0f);
+    const MATH::Vector4f EXPECTED_PROJECTED_RIGHT_COORDINATE(-1.0f, 0.0f, 3.0404f, -1.0f);
     REQUIRE(EXPECTED_PROJECTED_RIGHT_COORDINATE.X == Approx(projected_right_coordinate.X));
     REQUIRE(EXPECTED_PROJECTED_RIGHT_COORDINATE.Y == Approx(projected_right_coordinate.Y));
     REQUIRE(EXPECTED_PROJECTED_RIGHT_COORDINATE.Z == Approx(projected_right_coordinate.Z));
