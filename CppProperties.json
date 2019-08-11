@@ -7,6 +7,7 @@
             "intelliSenseMode": "windows-msvc-x64",
             "includePath":
             [
+                "${env.INCLUDE}",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/ucrt",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/um",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/shared",
@@ -21,6 +22,7 @@
             "intelliSenseMode": "windows-msvc-x64",
             "includePath":
             [
+                "${env.INCLUDE}",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/ucrt",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/um",
                 "${env.WindowsSdkDir}include/${env.WindowsSDKVersion}/shared",

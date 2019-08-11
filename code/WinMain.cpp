@@ -368,7 +368,7 @@ LRESULT CALLBACK MainWindowCallback(
         break;
     case WM_KEYDOWN:
     {
-        const float move_speed = 0.1f;
+        const float move_speed = 1.0f;
         int virtual_key_code = static_cast<int>(w_param);
         switch (virtual_key_code)
         {
@@ -655,7 +655,7 @@ int CALLBACK WinMain(
         objects.push_back(current_object_3D);
     }
 
-#define SINGLE_TRIANGLE 0
+#define SINGLE_TRIANGLE 1
 #if SINGLE_TRIANGLE
     objects.clear();
     GRAPHICS::Object3D test_object_3D;
@@ -665,6 +665,41 @@ int CALLBACK WinMain(
     test_object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -2.0f);
     objects.push_back(test_object_3D);
 #endif
+
+    objects.clear();
+
+    std::vector<MATH::Vector3f> vertices =
+    {
+        MATH::Vector3f(5.0f, 5.0f, 5.0f),
+        MATH::Vector3f(-5.0f, 5.0f, 5.0f),
+        MATH::Vector3f(-5.0f, 5.0f, -5.0f),
+        MATH::Vector3f(5.0f, 5.0f, -5.0f),
+        MATH::Vector3f(5.0f, -5.0f, 5.0f),
+        MATH::Vector3f(-5.0f, -5.0f, 5.0f),
+        MATH::Vector3f(-5.0f, -5.0f, -5.0f),
+        MATH::Vector3f(5.0f, -5.0f, -5.0f),
+    };
+
+    std::vector<GRAPHICS::Triangle> triangles =
+    {
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[2], vertices[1], vertices[0]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[3], vertices[2], vertices[0]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[4], vertices[7], vertices[0]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[7], vertices[3], vertices[0]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[6], vertices[7], vertices[4]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[5], vertices[6], vertices[4]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[2], vertices[6], vertices[1]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[5], vertices[6], vertices[1]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[7], vertices[6], vertices[3]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[5], vertices[4], vertices[0]} },
+        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[1], vertices[5], vertices[0]} },
+    };
+
+    GRAPHICS::Object3D cube;
+    cube.Triangles = triangles;
+    cube.Scale = MATH::Vector3f(5.0f, 5.0f, 5.0f);
+    cube.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -2.0f);
+    objects.push_back(cube);
 
     // RUN A MESSAGE LOOP.
     constexpr float TARGET_FRAMES_PER_SECOND = 60.0f;
