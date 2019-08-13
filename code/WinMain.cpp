@@ -6,8 +6,9 @@
 #include <thread>
 #include <vector>
 #include <Windows.h>
+#include "Graphics/Camera.h"
+#include "Graphics/Cube.h"
 #include "Graphics/Object3D.h"
-#include "Graphics/RayTracing/Camera.h"
 #include "Graphics/RayTracing/Material.h"
 #include "Graphics/RayTracing/PointLight.h"
 #include "Graphics/RayTracing/RayTracingAlgorithm.h"
@@ -454,27 +455,21 @@ LRESULT CALLBACK MainWindowCallback(
 #else
         case VK_UP:
             g_renderer->Camera.WorldPosition.Y += move_speed;
-            g_renderer->Camera.LookAtWorldPosition.Y += move_speed;
             break;
         case VK_DOWN:
             g_renderer->Camera.WorldPosition.Y -= move_speed;
-            g_renderer->Camera.LookAtWorldPosition.Y -= move_speed;
             break;
         case VK_LEFT:
             g_renderer->Camera.WorldPosition.X -= move_speed;
-            g_renderer->Camera.LookAtWorldPosition.X -= move_speed;
             break;
         case VK_RIGHT:
             g_renderer->Camera.WorldPosition.X += move_speed;
-            g_renderer->Camera.LookAtWorldPosition.X += move_speed;
             break;
         case 0x57: // W
             g_renderer->Camera.WorldPosition.Z -= move_speed;
-            g_renderer->Camera.LookAtWorldPosition.Z -= move_speed;
             break;
         case 0x53: // S
             g_renderer->Camera.WorldPosition.Z += move_speed;
-            g_renderer->Camera.LookAtWorldPosition.Z += move_speed;
             break;
     }
 
@@ -573,7 +568,7 @@ int CALLBACK WinMain(
     // PERFORM RAY TRACING.
     GRAPHICS::RAY_TRACING::RayTracingAlgorithm ray_tracer;
 
-    ray_tracer.Camera = GRAPHICS::RAY_TRACING::Camera::LookAt(MATH::Vector3f(0.0f, 0.0f, 0.0f));
+    ray_tracer.Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(0.0f, 0.0f, 0.0f), MATH::Vector3f(0.0f, 0.0f, 1.0f));
 
     ray_tracer.Render(*g_scene, render_target);
 
@@ -625,9 +620,7 @@ int CALLBACK WinMain(
     // CREATE THE RENDERER.
     g_renderer = std::make_unique<GRAPHICS::Renderer>();
 
-    g_renderer->Camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 100.0f);
-    g_renderer->Camera.LookAtWorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
-    g_renderer->Camera.UpDirection = MATH::Vector3f(0.0f, 1.0f, 0.0f);
+    g_renderer->Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(0.0f, 0.0f, 0.0f), MATH::Vector3f(0.0f, 0.0f, 100.0f));
 
     // CREATE THE TRIANGLES TO RENDER.
     std::random_device random_number_generator;
@@ -655,7 +648,7 @@ int CALLBACK WinMain(
         objects.push_back(current_object_3D);
     }
 
-#define SINGLE_TRIANGLE 1
+#define SINGLE_TRIANGLE 0
 #if SINGLE_TRIANGLE
     objects.clear();
     GRAPHICS::Object3D test_object_3D;
@@ -666,40 +659,15 @@ int CALLBACK WinMain(
     objects.push_back(test_object_3D);
 #endif
 
+#define CUBE 1
+#if CUBE
     objects.clear();
 
-    std::vector<MATH::Vector3f> vertices =
-    {
-        MATH::Vector3f(5.0f, 5.0f, 5.0f),
-        MATH::Vector3f(-5.0f, 5.0f, 5.0f),
-        MATH::Vector3f(-5.0f, 5.0f, -5.0f),
-        MATH::Vector3f(5.0f, 5.0f, -5.0f),
-        MATH::Vector3f(5.0f, -5.0f, 5.0f),
-        MATH::Vector3f(-5.0f, -5.0f, 5.0f),
-        MATH::Vector3f(-5.0f, -5.0f, -5.0f),
-        MATH::Vector3f(5.0f, -5.0f, -5.0f),
-    };
-
-    std::vector<GRAPHICS::Triangle> triangles =
-    {
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[2], vertices[1], vertices[0]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[3], vertices[2], vertices[0]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[4], vertices[7], vertices[0]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[7], vertices[3], vertices[0]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[6], vertices[7], vertices[4]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[5], vertices[6], vertices[4]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[2], vertices[6], vertices[1]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[5], vertices[6], vertices[1]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[7], vertices[6], vertices[3]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[5], vertices[4], vertices[0]} },
-        GRAPHICS::Triangle { GRAPHICS::Color::GREEN, {vertices[1], vertices[5], vertices[0]} },
-    };
-
-    GRAPHICS::Object3D cube;
-    cube.Triangles = triangles;
-    cube.Scale = MATH::Vector3f(5.0f, 5.0f, 5.0f);
+    GRAPHICS::Object3D cube = GRAPHICS::Cube::Create(GRAPHICS::Color::GREEN);
+    cube.Scale = MATH::Vector3f(10.0f, 10.0f, 10.0f);
     cube.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -2.0f);
     objects.push_back(cube);
+#endif
 
     // RUN A MESSAGE LOOP.
     constexpr float TARGET_FRAMES_PER_SECOND = 60.0f;

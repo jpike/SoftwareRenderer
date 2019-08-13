@@ -2,8 +2,6 @@
 
 namespace GRAPHICS
 {
-namespace RAY_TRACING
-{
     /// A plane onto which an image is projected when viewed by a camera.
     /// The viewing plane is always centerd directly in front of the camera.
     class ViewingPlane
@@ -20,5 +18,4 @@ namespace RAY_TRACING
         /// Defaults to 2 for simple viewing plane with min/max dimensions of -1 and 1.
         float Height = 2.0f;
     };
-}
 }

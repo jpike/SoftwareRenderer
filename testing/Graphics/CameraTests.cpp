@@ -10,10 +10,7 @@ TEST_CASE("View transform can transform world space coordinates to camera space 
     MATH::Vector4f right_coordinate(1.0f, 0.0f, 0.0f, 1.0f);
 
     // DEFINE A BASIC CAMERA.
-    GRAPHICS::Camera camera;
-    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -1.0f);
-    camera.UpDirection = MATH::Vector3f(0.0f, 1.0f, 0.0f);
-    camera.LookAtWorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
+    GRAPHICS::Camera camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(0.0f, 0.0f, 0.0f), MATH::Vector3f(0.0f, 0.0f, -1.0f));
 
     // CREATE THE VIEW TRANSFORM.
     MATH::Matrix4x4f view_transform = camera.ViewTransform();
@@ -52,10 +49,7 @@ TEST_CASE("Perspective projection projects camera space coordinates correctly.",
     MATH::Vector4f camera_space_right_coordinate(-1.0f, 0.0f, -1.0f, 1.0f);
 
     // DEFINE A BASIC CAMERA.
-    GRAPHICS::Camera camera;
-    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -1.0f);
-    camera.UpDirection = MATH::Vector3f(0.0f, 1.0f, 0.0f);
-    camera.LookAtWorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
+    GRAPHICS::Camera camera = GRAPHICS::Camera::LookAt(MATH::Vector3f(0.0f, 0.0f, 0.0f));
 
     // CREATE THE PERSPECTIVE PROJECTION MATRIX.
     const MATH::Angle<float>::Degrees FIELD_OF_VIEW(90.0f);

@@ -1,4 +1,4 @@
-#include "Graphics/RayTracing/Camera.h"
+#include "Graphics/Camera.h"
 #include "ThirdParty/Catch/catch.hpp"
 
 TEST_CASE("An orthographic viewing ray for the top-left corner can be correctly computed.", "[Camera][ViewingRay][Orthographic]")
@@ -15,7 +15,8 @@ TEST_CASE("An orthographic viewing ray for the top-left corner can be correctly 
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE TOP-LEFT CORNER.
@@ -52,7 +53,8 @@ TEST_CASE("An orthographic viewing ray for the top-right corner can be correctly
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE TOP-RIGHT CORNER.
@@ -91,7 +93,8 @@ TEST_CASE("An orthographic viewing ray for the bottom-left corner can be correct
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE BOTTOM-LEFT CORNER.
@@ -130,7 +133,8 @@ TEST_CASE("An orthographic viewing ray for the bottom-right corner can be correc
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE BOTTOM-RIGHT CORNER.
@@ -169,7 +173,8 @@ TEST_CASE("An orthographic viewing ray for the center can be correctly computed.
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE CENTER.
@@ -209,7 +214,8 @@ TEST_CASE("An orthographic viewing ray for the top-right quadrant can be correct
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE TOP-RIGHT QUADRANT.
@@ -246,7 +252,8 @@ TEST_CASE("An orthographic viewing ray for the top-left quadrant can be correctl
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE TOP-LEFT QUADRANT.
@@ -283,7 +290,8 @@ TEST_CASE("An orthographic viewing ray for the bottom-left quadrant can be corre
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE BOTTOM-LEFT QUADRANT.
@@ -320,7 +328,8 @@ TEST_CASE("An orthographic viewing ray for the bottom-right quadrant can be corr
         GRAPHICS::ColorFormat::RGBA);
 
     // DEFINE AN ORTHOGRAPHIC CAMERA.
-    GRAPHICS::RAY_TRACING::Camera camera;
+    GRAPHICS::Camera camera;
+    camera.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 1.0f);
     camera.Projection = GRAPHICS::ProjectionType::ORTHOGRAPHIC;
 
     // DEFINE PIXEL COORDINATES FOR THE BOTTOM-RIGHT QUADRANT.

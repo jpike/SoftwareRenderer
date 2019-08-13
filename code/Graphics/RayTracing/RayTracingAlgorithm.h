@@ -1,8 +1,8 @@
 #pragma once
 
 #include <optional>
+#include "Graphics/Camera.h"
 #include "Graphics/Color.h"
-#include "Graphics/RayTracing/Camera.h"
 #include "Graphics/RayTracing/IObject3D.h"
 #include "Graphics/RayTracing/Ray.h"
 #include "Graphics/RayTracing/RayObjectIntersection.h"
@@ -23,7 +23,7 @@ namespace RAY_TRACING
 
         // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
         /// The camera used for rendering.
-        GRAPHICS::RAY_TRACING::Camera Camera = GRAPHICS::RAY_TRACING::Camera();
+        GRAPHICS::Camera Camera = GRAPHICS::Camera();
         /// True if ambient lighting should be calculated; false otherwise.
         bool Ambient = true;
         /// True if shadows should be calculated; false otherwise.

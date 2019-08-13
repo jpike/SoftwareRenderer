@@ -59,22 +59,14 @@ namespace GRAPHICS
             Triangle screen_space_triangle = local_triangle;
             for (auto& vertex : screen_space_triangle.Vertices)
             {
-                /*vertex.X *= object_3D.Scale.X;
-                vertex.Y *= object_3D.Scale.Y;
-                vertex.Z *= object_3D.Scale.Z;
-
-                /// @todo   Flip Y more properly.
-                vertex.Y = -vertex.Y;
-
-                vertex += object_3D.WorldPosition;*/
-
+                // Y must be flipped since the world Y coordinates are positive going up,
+                // the opposite is true for the screen coordinates.
                 vertex.Y = -vertex.Y;
                 MATH::Vector4f homogeneous_vertex = MATH::Vector4f::HomogeneousPositionVector(vertex);
                 MATH::Vector4f transformed_vertex = final_transform * homogeneous_vertex;
                 vertex = MATH::Vector3f(transformed_vertex.X, transformed_vertex.Y, transformed_vertex.Z);
+                // The vertex must be de-homogenized.
                 vertex = MATH::Vector3f::Scale(1.0f / transformed_vertex.W, vertex);
-                /// @todo   Flip Y more properly.
-                //vertex.Y = -vertex.Y;
             }
 
             // RENDER THE SCREEN-SPACE TRIANGLE.

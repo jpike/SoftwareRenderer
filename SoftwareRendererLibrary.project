@@ -1,7 +1,7 @@
 #include "Graphics/Camera.cpp"
 #include "Graphics/Color.cpp"
+#include "Graphics/Cube.cpp"
 #include "Graphics/Object3D.cpp"
-#include "Graphics/RayTracing/Camera.cpp"
 #include "Graphics/RayTracing/PointLight.cpp"
 #include "Graphics/RayTracing/Ray.cpp"
 #include "Graphics/RayTracing/RayObjectIntersection.cpp"
