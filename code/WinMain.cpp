@@ -648,7 +648,7 @@ int CALLBACK WinMain(
         objects.push_back(current_object_3D);
     }
 
-#define SINGLE_TRIANGLE 0
+#define SINGLE_TRIANGLE 1
 #if SINGLE_TRIANGLE
     objects.clear();
     GRAPHICS::Object3D test_object_3D;
@@ -659,7 +659,7 @@ int CALLBACK WinMain(
     objects.push_back(test_object_3D);
 #endif
 
-#define CUBE 1
+#define CUBE 0
 #if CUBE
     objects.clear();
 

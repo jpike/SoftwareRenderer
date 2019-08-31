@@ -79,9 +79,98 @@ namespace GRAPHICS
     /// @param[in,out]  render_target - The target to render to.
     void Renderer::Render(const Triangle& triangle, RenderTarget& render_target) const
     {
-        // DRAW THE FIRST EDGE.
+        // GET THE VERTICES.
         const MATH::Vector3f& first_vertex = triangle.Vertices[0];
         const MATH::Vector3f& second_vertex = triangle.Vertices[1];
+        const MATH::Vector3f& third_vertex = triangle.Vertices[2];
+
+        // GET THE BOUNDING RECTANGLE OF THE TRIANGLE.
+        /// @todo   Create rectangle class.
+        float min_x = std::min({ first_vertex.X, second_vertex.X, third_vertex.X });
+        float max_x = std::max({ first_vertex.X, second_vertex.X, third_vertex.X });
+        float min_y = std::min({ first_vertex.Y, second_vertex.Y, third_vertex.Y });
+        float max_y = std::max({ first_vertex.Y, second_vertex.Y, third_vertex.Y });
+
+        // COLOR PIXELS WITHIN THE TRIANGLE.
+        constexpr float ONE_PIXEL = 1.0f;
+        for (float y = min_y; y <= max_y; y += ONE_PIXEL)
+        {
+            for (float x = min_x; x <= max_x; x += ONE_PIXEL)
+            {
+                // COMPUTE THE BARYCENTRIC COORDINATES OF THE CURRENT PIXEL POSITION.
+                // The following diagram shows the order of the vertices:
+                //             first_vertex
+                //                 /\
+                //                /  \
+                // second_vertex /____\ third_vertex
+                float current_pixel_signed_distance_from_bottom_edge = (
+                    ((second_vertex.Y - third_vertex.Y) * x) +
+                    ((third_vertex.X - second_vertex.X) * y) +
+                    (second_vertex.X * third_vertex.Y) -
+                    (third_vertex.X * second_vertex.Y));
+                float top_vertex_signed_distance_from_bottom_edge = (
+                    ((second_vertex.Y - third_vertex.Y) * first_vertex.X) +
+                    ((third_vertex.X - second_vertex.X) * first_vertex.Y) +
+                    (second_vertex.X * third_vertex.Y) -
+                    (third_vertex.X * second_vertex.Y));
+                float scaled_signed_distance_of_current_pixel_relative_to_bottom_edge = (current_pixel_signed_distance_from_bottom_edge / top_vertex_signed_distance_from_bottom_edge);
+
+                float current_pixel_signed_distance_from_left_edge = (
+                    ((second_vertex.Y - first_vertex.Y) * x) +
+                    ((first_vertex.X - second_vertex.X) * y) +
+                    (second_vertex.X * first_vertex.Y) -
+                    (first_vertex.X * second_vertex.Y));
+                float right_vertex_signed_distance_from_left_edge = (
+                    ((second_vertex.Y - first_vertex.Y) * third_vertex.X) +
+                    ((first_vertex.X - second_vertex.X) * third_vertex.Y) +
+                    (second_vertex.X * first_vertex.Y) -
+                    (first_vertex.X * second_vertex.Y));
+                float scaled_signed_distance_of_current_pixel_relative_to_left_edge = (current_pixel_signed_distance_from_left_edge / right_vertex_signed_distance_from_left_edge);
+
+                float scaled_signed_distance_of_current_pixel_relative_to_right_edge = (
+                    1.0f - 
+                    scaled_signed_distance_of_current_pixel_relative_to_left_edge - 
+                    scaled_signed_distance_of_current_pixel_relative_to_bottom_edge);
+
+                // CHECK IF THE PIXEL IS WITHIN THE TRIANGLE.
+                // It's allowed to be on the borders too.
+                constexpr float MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE = 0.0f;
+                constexpr float MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX = 1.0f;
+                bool pixel_between_bottom_edge_and_top_vertex = (
+                    (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_bottom_edge) &&
+                    (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                bool pixel_between_left_edge_and_right_vertex = (
+                    (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_left_edge) &&
+                    (scaled_signed_distance_of_current_pixel_relative_to_left_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                bool pixel_between_right_edge_and_left_vertex = (
+                    (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_right_edge) &&
+                    (scaled_signed_distance_of_current_pixel_relative_to_right_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                bool pixel_in_triangle = (
+                    pixel_between_bottom_edge_and_top_vertex &&
+                    pixel_between_left_edge_and_right_vertex &&
+                    pixel_between_right_edge_and_left_vertex);
+                if (pixel_in_triangle)
+                {
+                    // The coordinates need to be rounded to integer in order
+                    // to plot a pixel on a fixed grid.
+                    render_target.WritePixel(
+                        static_cast<unsigned int>(std::round(x)),
+                        static_cast<unsigned int>(std::round(y)),
+                        Color(0.0f, 0.0f, 1.0f, 1.0f));
+                }
+                else
+                {
+                    // The coordinates need to be rounded to integer in order
+                    // to plot a pixel on a fixed grid.
+                    /*render_target.WritePixel(
+                        static_cast<unsigned int>(std::round(x)),
+                        static_cast<unsigned int>(std::round(y)),
+                        Color(1.0f, 0.0f, 0.0f, 1.0f));*/
+                }
+            }
+        }
+
+        // DRAW THE FIRST EDGE.
         DrawLine(
             first_vertex.X,
             first_vertex.Y,
@@ -91,7 +180,6 @@ namespace GRAPHICS
             render_target);
 
         // DRAW THE SECOND EDGE.
-        const MATH::Vector3f& third_vertex = triangle.Vertices[2];
         DrawLine(
             second_vertex.X,
             second_vertex.Y,

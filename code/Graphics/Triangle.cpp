@@ -33,8 +33,8 @@ namespace GRAPHICS
         triangle.Vertices =
         {
             MATH::Vector3f(top_x, top_y, z),
-            MATH::Vector3f(right_x, bottom_y, z),
-            MATH::Vector3f(left_x, bottom_y, z)
+            MATH::Vector3f(left_x, bottom_y, z),
+            MATH::Vector3f(right_x, bottom_y, z)
         };
         return triangle;
     }
