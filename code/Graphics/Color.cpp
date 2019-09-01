@@ -83,6 +83,27 @@ namespace GRAPHICS
         return multiplied_color;
     }
 
+    /// Interpolates between 2 colors (excluding alpha components), performing clamping.
+    /// @param[in]  start_color - The starting color to interpolate from (ratio = 0).
+    /// @param[in]  end_color - The ending color to interpolate to (ratio = 1).
+    /// @return The interpolated color.
+    Color Color::InterpolateRedGreenBlue(const Color& start_color, const Color& end_color, float ratio_toward_end)
+    {
+        Color interpolated_color = start_color;
+
+        float ratio_of_start = (1.0f - ratio_toward_end);
+
+        // COMPUTE THE INTERPOLATED COLOR COMPONENTS.
+        interpolated_color.Red = (start_color.Red * ratio_of_start) + (end_color.Red * ratio_toward_end);
+        interpolated_color.Green = (start_color.Green * ratio_of_start) + (end_color.Green * ratio_toward_end);
+        interpolated_color.Blue = (start_color.Blue * ratio_of_start) + (end_color.Blue * ratio_toward_end);
+
+        // Clamping is performed to keep them within the valid range.
+        interpolated_color.Clamp();
+
+        return interpolated_color;
+    }
+
     /// Constructor taking floating-point components.
     /// @param[in]  red - The red component of the color.
     /// @param[in]  green - The green component of the color.
@@ -262,6 +283,16 @@ namespace GRAPHICS
         }
     }
 
+    /// Clamps all color components to the valid range,
+    /// which needs to be done after many operations.
+    void Color::Clamp()
+    {
+        Red = MATH::Number::Clamp(Red, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
+        Green = MATH::Number::Clamp(Green, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
+        Blue = MATH::Number::Clamp(Blue, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
+        Alpha = MATH::Number::Clamp(Alpha, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
+    }
+
     /// Converts an 8-bit integral color component to floating-point format.
     /// @param[in]  color_component_as_uint8 - The color component to convert.
     /// @return The floating-point version of the color component.
@@ -287,15 +318,5 @@ namespace GRAPHICS
         // CAST THE SCALED COLOR COMPONENT TO AN 8-BIT INTEGER.
         uint8_t color_component_as_uint8 = static_cast<uint8_t>(scaled_color_component);
         return color_component_as_uint8;
-    }
-
-    /// Clamps all color components to the valid range,
-    /// which needs to be done after many operations.
-    void Color::Clamp()
-    {
-        Red = MATH::Number::Clamp(Red, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
-        Green = MATH::Number::Clamp(Green, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
-        Blue = MATH::Number::Clamp(Blue, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
-        Alpha = MATH::Number::Clamp(Alpha, MIN_FLOAT_COLOR_COMPONENT, MAX_FLOAT_COLOR_COMPONENT);
     }
 }

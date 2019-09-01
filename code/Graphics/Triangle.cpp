@@ -2,10 +2,10 @@
 
 namespace GRAPHICS
 {
-    /// Creates an equilateral triangle with the specified color.
-    /// @param[in]  color - The color of the triangle.
-    /// @return An equilateral triangle of the specified color.
-    Triangle Triangle::CreateEquilateral(const GRAPHICS::Color& color)
+    /// Creates an equilateral triangle with the specified material.
+    /// @param[in]  material - The material of the triangle.
+    /// @return An equilateral triangle of the specified material.
+    Triangle Triangle::CreateEquilateral(const GRAPHICS::Material* const material)
     {
         // DEFINE THE OBJECT-SPACE POSITIONS OF THE TRIANGLE VERTICES.
         // The Pythagorean theorem is used to compute the coordinates of the vertices:
@@ -29,7 +29,7 @@ namespace GRAPHICS
 
         // SET THE VERTICES IN A TRIANGLE.
         Triangle triangle;
-        triangle.Color = color;
+        triangle.Material = material;
         triangle.Vertices =
         {
             MATH::Vector3f(top_x, top_y, z),

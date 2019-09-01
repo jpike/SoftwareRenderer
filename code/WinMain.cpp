@@ -623,9 +623,26 @@ int CALLBACK WinMain(
     g_renderer->Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(0.0f, 0.0f, 0.0f), MATH::Vector3f(0.0f, 0.0f, 100.0f));
 
     // CREATE THE TRIANGLES TO RENDER.
+    GRAPHICS::Material material;
+    material.Shading = GRAPHICS::ShadingType::FACE_VERTEX_COLOR_INTERPOLATION;
+    material.WireframeColor = GRAPHICS::Color(1.0f, 0.0f, 1.0f, 1.0f);
+    material.VertexWireframeColors =
+    {
+        GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f),
+        GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f),
+        GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f),
+    };
+    material.FaceColor = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f);
+    material.VertexFaceColors =
+    {
+        GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f),
+        GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f),
+        GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f),
+    };
+
     std::random_device random_number_generator;
     std::vector<GRAPHICS::Object3D> objects;
-    GRAPHICS::Triangle triangle = GRAPHICS::Triangle::CreateEquilateral(GRAPHICS::Color::GREEN);
+    GRAPHICS::Triangle triangle = GRAPHICS::Triangle::CreateEquilateral(&material);
     // Can go up to about 200 triangles with some 30 FPS and some dips.
     // 150 triangles is about the cap in which we mostly get 30 FPS,
     // although there are still some occasional dips.
@@ -648,7 +665,7 @@ int CALLBACK WinMain(
         objects.push_back(current_object_3D);
     }
 
-#define SINGLE_TRIANGLE 1
+#define SINGLE_TRIANGLE 0
 #if SINGLE_TRIANGLE
     objects.clear();
     GRAPHICS::Object3D test_object_3D;
@@ -659,11 +676,11 @@ int CALLBACK WinMain(
     objects.push_back(test_object_3D);
 #endif
 
-#define CUBE 0
+#define CUBE 1
 #if CUBE
     objects.clear();
 
-    GRAPHICS::Object3D cube = GRAPHICS::Cube::Create(GRAPHICS::Color::GREEN);
+    GRAPHICS::Object3D cube = GRAPHICS::Cube::Create(&material);
     cube.Scale = MATH::Vector3f(10.0f, 10.0f, 10.0f);
     cube.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -2.0f);
     objects.push_back(cube);

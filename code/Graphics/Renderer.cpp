@@ -80,9 +80,277 @@ namespace GRAPHICS
     void Renderer::Render(const Triangle& triangle, RenderTarget& render_target) const
     {
         // GET THE VERTICES.
+        // They're needed for all kinds of shading.
         const MATH::Vector3f& first_vertex = triangle.Vertices[0];
         const MATH::Vector3f& second_vertex = triangle.Vertices[1];
         const MATH::Vector3f& third_vertex = triangle.Vertices[2];
+
+        // RENDER THE TRIANGLE BASED ON SHADING TYPE.
+        switch (triangle.Material->Shading)
+        {
+            case ShadingType::WIREFRAME:
+            {
+                // DRAW THE FIRST EDGE.
+                DrawLine(
+                    first_vertex.X,
+                    first_vertex.Y,
+                    second_vertex.X,
+                    second_vertex.Y,
+                    triangle.Material->WireframeColor,
+                    render_target);
+
+                // DRAW THE SECOND EDGE.
+                DrawLine(
+                    second_vertex.X,
+                    second_vertex.Y,
+                    third_vertex.X,
+                    third_vertex.Y,
+                    triangle.Material->WireframeColor,
+                    render_target);
+
+                // DRAW THE THIRD EDGE.
+                DrawLine(
+                    third_vertex.X,
+                    third_vertex.Y,
+                    first_vertex.X,
+                    first_vertex.Y,
+                    triangle.Material->WireframeColor,
+                    render_target);
+                break;
+            }
+            case ShadingType::WIREFRAME_VERTEX_COLOR_INTERPOLATION:
+            {
+                // DRAW THE FIRST EDGE.
+                DrawLineWithInterpolatedColor(
+                    first_vertex.X,
+                    first_vertex.Y,
+                    second_vertex.X,
+                    second_vertex.Y,
+                    triangle.Material->VertexWireframeColors[0],
+                    triangle.Material->VertexWireframeColors[1],
+                    render_target);
+
+                // DRAW THE SECOND EDGE.
+                DrawLineWithInterpolatedColor(
+                    second_vertex.X,
+                    second_vertex.Y,
+                    third_vertex.X,
+                    third_vertex.Y,
+                    triangle.Material->VertexWireframeColors[1],
+                    triangle.Material->VertexWireframeColors[2],
+                    render_target);
+
+                // DRAW THE THIRD EDGE.
+                DrawLineWithInterpolatedColor(
+                    third_vertex.X,
+                    third_vertex.Y,
+                    first_vertex.X,
+                    first_vertex.Y,
+                    triangle.Material->VertexWireframeColors[2],
+                    triangle.Material->VertexWireframeColors[0],
+                    render_target);
+                break;
+            }
+            case ShadingType::FLAT:
+            {
+                // COMPUTE THE BARYCENTRIC COORDINATES OF THE TRIANGLE VERTICES.
+                float top_vertex_signed_distance_from_bottom_edge = (
+                    ((second_vertex.Y - third_vertex.Y) * first_vertex.X) +
+                    ((third_vertex.X - second_vertex.X) * first_vertex.Y) +
+                    (second_vertex.X * third_vertex.Y) -
+                    (third_vertex.X * second_vertex.Y));
+                float right_vertex_signed_distance_from_left_edge = (
+                    ((second_vertex.Y - first_vertex.Y) * third_vertex.X) +
+                    ((first_vertex.X - second_vertex.X) * third_vertex.Y) +
+                    (second_vertex.X * first_vertex.Y) -
+                    (first_vertex.X * second_vertex.Y));
+
+                // GET THE BOUNDING RECTANGLE OF THE TRIANGLE.
+                /// @todo   Create rectangle class.
+                float min_x = std::min({ first_vertex.X, second_vertex.X, third_vertex.X });
+                float max_x = std::max({ first_vertex.X, second_vertex.X, third_vertex.X });
+                float min_y = std::min({ first_vertex.Y, second_vertex.Y, third_vertex.Y });
+                float max_y = std::max({ first_vertex.Y, second_vertex.Y, third_vertex.Y });
+
+                // COLOR PIXELS WITHIN THE TRIANGLE.
+                constexpr float ONE_PIXEL = 1.0f;
+                for (float y = min_y; y <= max_y; y += ONE_PIXEL)
+                {
+                    for (float x = min_x; x <= max_x; x += ONE_PIXEL)
+                    {
+                        // COMPUTE THE BARYCENTRIC COORDINATES OF THE CURRENT PIXEL POSITION.
+                        // The following diagram shows the order of the vertices:
+                        //             first_vertex
+                        //                 /\
+                        //                /  \
+                        // second_vertex /____\ third_vertex
+                        float current_pixel_signed_distance_from_bottom_edge = (
+                            ((second_vertex.Y - third_vertex.Y) * x) +
+                            ((third_vertex.X - second_vertex.X) * y) +
+                            (second_vertex.X * third_vertex.Y) -
+                            (third_vertex.X * second_vertex.Y));
+                        float scaled_signed_distance_of_current_pixel_relative_to_bottom_edge = (current_pixel_signed_distance_from_bottom_edge / top_vertex_signed_distance_from_bottom_edge);
+
+                        float current_pixel_signed_distance_from_left_edge = (
+                            ((second_vertex.Y - first_vertex.Y) * x) +
+                            ((first_vertex.X - second_vertex.X) * y) +
+                            (second_vertex.X * first_vertex.Y) -
+                            (first_vertex.X * second_vertex.Y));
+                        float scaled_signed_distance_of_current_pixel_relative_to_left_edge = (current_pixel_signed_distance_from_left_edge / right_vertex_signed_distance_from_left_edge);
+
+                        float scaled_signed_distance_of_current_pixel_relative_to_right_edge = (
+                            1.0f -
+                            scaled_signed_distance_of_current_pixel_relative_to_left_edge -
+                            scaled_signed_distance_of_current_pixel_relative_to_bottom_edge);
+
+                        // CHECK IF THE PIXEL IS WITHIN THE TRIANGLE.
+                        // It's allowed to be on the borders too.
+                        constexpr float MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE = 0.0f;
+                        constexpr float MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX = 1.0f;
+                        bool pixel_between_bottom_edge_and_top_vertex = (
+                            (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_bottom_edge) &&
+                            (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                        bool pixel_between_left_edge_and_right_vertex = (
+                            (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_left_edge) &&
+                            (scaled_signed_distance_of_current_pixel_relative_to_left_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                        bool pixel_between_right_edge_and_left_vertex = (
+                            (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_right_edge) &&
+                            (scaled_signed_distance_of_current_pixel_relative_to_right_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                        bool pixel_in_triangle = (
+                            pixel_between_bottom_edge_and_top_vertex &&
+                            pixel_between_left_edge_and_right_vertex &&
+                            pixel_between_right_edge_and_left_vertex);
+                        if (pixel_in_triangle)
+                        {
+                            // The coordinates need to be rounded to integer in order
+                            // to plot a pixel on a fixed grid.
+                            render_target.WritePixel(
+                                static_cast<unsigned int>(std::round(x)),
+                                static_cast<unsigned int>(std::round(y)),
+                                triangle.Material->FaceColor);
+                        }
+                    }
+                }
+                break;
+            }
+            case ShadingType::FACE_VERTEX_COLOR_INTERPOLATION:
+            {
+                // COMPUTE THE BARYCENTRIC COORDINATES OF THE TRIANGLE VERTICES.
+                float top_vertex_signed_distance_from_bottom_edge = (
+                    ((second_vertex.Y - third_vertex.Y) * first_vertex.X) +
+                    ((third_vertex.X - second_vertex.X) * first_vertex.Y) +
+                    (second_vertex.X * third_vertex.Y) -
+                    (third_vertex.X * second_vertex.Y));
+                float right_vertex_signed_distance_from_left_edge = (
+                    ((second_vertex.Y - first_vertex.Y) * third_vertex.X) +
+                    ((first_vertex.X - second_vertex.X) * third_vertex.Y) +
+                    (second_vertex.X * first_vertex.Y) -
+                    (first_vertex.X * second_vertex.Y));
+
+                // GET THE BOUNDING RECTANGLE OF THE TRIANGLE.
+                /// @todo   Create rectangle class.
+                float min_x = std::min({ first_vertex.X, second_vertex.X, third_vertex.X });
+                float max_x = std::max({ first_vertex.X, second_vertex.X, third_vertex.X });
+                float min_y = std::min({ first_vertex.Y, second_vertex.Y, third_vertex.Y });
+                float max_y = std::max({ first_vertex.Y, second_vertex.Y, third_vertex.Y });
+
+                // COLOR PIXELS WITHIN THE TRIANGLE.
+                constexpr float ONE_PIXEL = 1.0f;
+                for (float y = min_y; y <= max_y; y += ONE_PIXEL)
+                {
+                    for (float x = min_x; x <= max_x; x += ONE_PIXEL)
+                    {
+                        // COMPUTE THE BARYCENTRIC COORDINATES OF THE CURRENT PIXEL POSITION.
+                        // The following diagram shows the order of the vertices:
+                        //             first_vertex
+                        //                 /\
+                        //                /  \
+                        // second_vertex /____\ third_vertex
+                        float current_pixel_signed_distance_from_bottom_edge = (
+                            ((second_vertex.Y - third_vertex.Y) * x) +
+                            ((third_vertex.X - second_vertex.X) * y) +
+                            (second_vertex.X * third_vertex.Y) -
+                            (third_vertex.X * second_vertex.Y));
+                        float scaled_signed_distance_of_current_pixel_relative_to_bottom_edge = (current_pixel_signed_distance_from_bottom_edge / top_vertex_signed_distance_from_bottom_edge);
+
+                        float current_pixel_signed_distance_from_left_edge = (
+                            ((second_vertex.Y - first_vertex.Y) * x) +
+                            ((first_vertex.X - second_vertex.X) * y) +
+                            (second_vertex.X * first_vertex.Y) -
+                            (first_vertex.X * second_vertex.Y));
+                        float scaled_signed_distance_of_current_pixel_relative_to_left_edge = (current_pixel_signed_distance_from_left_edge / right_vertex_signed_distance_from_left_edge);
+
+                        float scaled_signed_distance_of_current_pixel_relative_to_right_edge = (
+                            1.0f -
+                            scaled_signed_distance_of_current_pixel_relative_to_left_edge -
+                            scaled_signed_distance_of_current_pixel_relative_to_bottom_edge);
+
+                        // CHECK IF THE PIXEL IS WITHIN THE TRIANGLE.
+                        // It's allowed to be on the borders too.
+                        constexpr float MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE = 0.0f;
+                        constexpr float MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX = 1.0f;
+                        bool pixel_between_bottom_edge_and_top_vertex = (
+                            (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_bottom_edge) &&
+                            (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                        bool pixel_between_left_edge_and_right_vertex = (
+                            (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_left_edge) &&
+                            (scaled_signed_distance_of_current_pixel_relative_to_left_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                        bool pixel_between_right_edge_and_left_vertex = (
+                            (MIN_SIGNED_DISTANCE_TO_BE_ON_EDGE <= scaled_signed_distance_of_current_pixel_relative_to_right_edge) &&
+                            (scaled_signed_distance_of_current_pixel_relative_to_right_edge <= MAX_SIGNED_DISTANCE_TO_BE_ON_VERTEX));
+                        bool pixel_in_triangle = (
+                            pixel_between_bottom_edge_and_top_vertex &&
+                            pixel_between_left_edge_and_right_vertex &&
+                            pixel_between_right_edge_and_left_vertex);
+                        if (pixel_in_triangle)
+                        {
+                            // The color needs to be interpolated with this kind of shading.
+                            Color interpolated_color = GRAPHICS::Color::BLACK;
+
+                            const Color& first_vertex_color = triangle.Material->VertexFaceColors[0];
+                            const Color& second_vertex_color = triangle.Material->VertexFaceColors[1];
+                            const Color& third_vertex_color = triangle.Material->VertexFaceColors[2];
+                            interpolated_color.Red = (
+                                (scaled_signed_distance_of_current_pixel_relative_to_right_edge * third_vertex_color.Red) +
+                                (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_vertex_color.Red) +
+                                (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_vertex_color.Red));
+                            interpolated_color.Green = (
+                                (scaled_signed_distance_of_current_pixel_relative_to_right_edge * third_vertex_color.Green) +
+                                (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_vertex_color.Green) +
+                                (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_vertex_color.Green));
+                            interpolated_color.Blue = (
+                                (scaled_signed_distance_of_current_pixel_relative_to_right_edge * third_vertex_color.Blue) +
+                                (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_vertex_color.Blue) +
+                                (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_vertex_color.Blue));
+                            interpolated_color.Clamp();
+
+                            // The coordinates need to be rounded to integer in order
+                            // to plot a pixel on a fixed grid.
+                            render_target.WritePixel(
+                                static_cast<unsigned int>(std::round(x)),
+                                static_cast<unsigned int>(std::round(y)),
+                                interpolated_color);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        /// @todo   Look at reducing duplication of the above!
+
+#if 0
+        // COMPUTE THE BARYCENTRIC COORDINATES OF THE TRIANGLE VERTICES.
+        float top_vertex_signed_distance_from_bottom_edge = (
+            ((second_vertex.Y - third_vertex.Y) * first_vertex.X) +
+            ((third_vertex.X - second_vertex.X) * first_vertex.Y) +
+            (second_vertex.X * third_vertex.Y) -
+            (third_vertex.X * second_vertex.Y));
+        float right_vertex_signed_distance_from_left_edge = (
+            ((second_vertex.Y - first_vertex.Y) * third_vertex.X) +
+            ((first_vertex.X - second_vertex.X) * third_vertex.Y) +
+            (second_vertex.X * first_vertex.Y) -
+            (first_vertex.X * second_vertex.Y));
 
         // GET THE BOUNDING RECTANGLE OF THE TRIANGLE.
         /// @todo   Create rectangle class.
@@ -108,21 +376,11 @@ namespace GRAPHICS
                     ((third_vertex.X - second_vertex.X) * y) +
                     (second_vertex.X * third_vertex.Y) -
                     (third_vertex.X * second_vertex.Y));
-                float top_vertex_signed_distance_from_bottom_edge = (
-                    ((second_vertex.Y - third_vertex.Y) * first_vertex.X) +
-                    ((third_vertex.X - second_vertex.X) * first_vertex.Y) +
-                    (second_vertex.X * third_vertex.Y) -
-                    (third_vertex.X * second_vertex.Y));
                 float scaled_signed_distance_of_current_pixel_relative_to_bottom_edge = (current_pixel_signed_distance_from_bottom_edge / top_vertex_signed_distance_from_bottom_edge);
 
                 float current_pixel_signed_distance_from_left_edge = (
                     ((second_vertex.Y - first_vertex.Y) * x) +
                     ((first_vertex.X - second_vertex.X) * y) +
-                    (second_vertex.X * first_vertex.Y) -
-                    (first_vertex.X * second_vertex.Y));
-                float right_vertex_signed_distance_from_left_edge = (
-                    ((second_vertex.Y - first_vertex.Y) * third_vertex.X) +
-                    ((first_vertex.X - second_vertex.X) * third_vertex.Y) +
                     (second_vertex.X * first_vertex.Y) -
                     (first_vertex.X * second_vertex.Y));
                 float scaled_signed_distance_of_current_pixel_relative_to_left_edge = (current_pixel_signed_distance_from_left_edge / right_vertex_signed_distance_from_left_edge);
@@ -169,33 +427,7 @@ namespace GRAPHICS
                 }
             }
         }
-
-        // DRAW THE FIRST EDGE.
-        DrawLine(
-            first_vertex.X,
-            first_vertex.Y,
-            second_vertex.X,
-            second_vertex.Y,
-            triangle.Color,
-            render_target);
-
-        // DRAW THE SECOND EDGE.
-        DrawLine(
-            second_vertex.X,
-            second_vertex.Y,
-            third_vertex.X,
-            third_vertex.Y,
-            triangle.Color,
-            render_target);
-
-        // DRAW THE THIRD EDGE.
-        DrawLine(
-            third_vertex.X,
-            third_vertex.Y,
-            first_vertex.X,
-            first_vertex.Y,
-            triangle.Color,
-            render_target);
+#endif
     }
 
     /// Renders a line with the specified endpoints (in screen coordinates).
@@ -255,6 +487,82 @@ namespace GRAPHICS
                 static_cast<unsigned int>(std::round(x)),
                 static_cast<unsigned int>(std::round(y)),
                 color);
+
+            // MOVE ALONG THE LINE FOR THE NEXT PIXEL.
+            x += x_increment;
+            y += y_increment;
+        }
+    }
+
+    /// Renders a line with the specified endpoints (in screen coordinates) and interpolated color.
+    /// @param[in]  start_x - The starting x coordinate of the line.
+    /// @param[in]  start_y - The starting y coordinate of the line.
+    /// @param[in]  end_x - The ending x coordinate of the line.
+    /// @param[in]  end_y - The ending y coordinate of the line.
+    /// @param[in]  start_color - The color of the line at the starting coordinate.
+    /// @param[in]  end_color - The color of the line at the ending coordinate.
+    /// @param[in,out]  render_target - The target to render to.
+    void Renderer::DrawLineWithInterpolatedColor(
+        const float start_x,
+        const float start_y,
+        const float end_x,
+        const float end_y,
+        const Color& start_color,
+        const Color& end_color,
+        RenderTarget& render_target) const
+    {
+        // COMPUTE THE LENGTH OF THE ENTIRE LINE.
+        MATH::Vector2f vector_from_start_to_end(end_x - start_x, end_y - start_y);
+        float line_length = vector_from_start_to_end.Length();
+
+        // COMPUTE THE INCREMENTS ALONG EACH AXIS FOR EACH PIXEL.
+        // Each time we draw a pixel, we need to move slightly
+        // further along the axes.
+        float delta_x = end_x - start_x;
+        float delta_y = end_y - start_y;
+        float length = std::max(std::abs(delta_x), std::abs(delta_y));
+        float x_increment = delta_x / length;
+        float y_increment = delta_y / length;
+
+        // HAVE THE LINE START BEING DRAWN AT THE STARTING COORDINATES.
+        float x = start_x;
+        float y = start_y;
+
+        // GET THE MAXIMUM POSSIBLE POSITION VALUES.
+        float max_x_position = static_cast<float>(render_target.GetWidthInPixels() - 1);
+        float max_y_position = static_cast<float>(render_target.GetHeightInPixels() - 1);
+
+        // DRAW PIXELS FOR THE LINE.
+        for (float pixel_index = 0.0f; pixel_index <= length; ++pixel_index)
+        {
+            // PREVENT WRITING BEYOND THE BOUNDARIES OF THE RENDER TARGET.
+            bool x_boundary_exceeded = (
+                (x < 0.0f) ||
+                (x > max_x_position));
+            bool y_boundary_exceeded = (
+                (y < 0.0f) ||
+                (y > max_y_position));
+            bool boundary_exceeded = (x_boundary_exceeded || y_boundary_exceeded);
+            if (boundary_exceeded)
+            {
+                // Continue to the next iteration of the loop in
+                // case there is another pixel to draw.
+                continue;
+            }
+
+            // CALCULATE THE COLOR AT THE CURRENT POINT.
+            MATH::Vector2f vector_to_current_pixel(x - start_x, y - start_y);
+            float length_to_current_pixel_from_line_start = vector_to_current_pixel.Length();
+            float ratio_toward_end_of_line = (length_to_current_pixel_from_line_start / line_length);
+            Color interpolated_color = Color::InterpolateRedGreenBlue(start_color, end_color, ratio_toward_end_of_line);
+
+            // DRAW A PIXEL AT THE CURRENT POSITION.
+            // The coordinates need to be rounded to integer in order
+            // to plot a pixel on a fixed grid.
+            render_target.WritePixel(
+                static_cast<unsigned int>(std::round(x)),
+                static_cast<unsigned int>(std::round(y)),
+                interpolated_color);
 
             // MOVE ALONG THE LINE FOR THE NEXT PIXEL.
             x += x_increment;

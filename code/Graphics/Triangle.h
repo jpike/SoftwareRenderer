@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstddef>
-#include "Graphics/Color.h"
+#include "Graphics/Material.h"
 #include "Math/Vector3.h"
 
 namespace GRAPHICS
@@ -16,11 +16,13 @@ namespace GRAPHICS
         static constexpr std::size_t VERTEX_COUNT = 3;
 
         // CONSTRUCTION.
-        static Triangle CreateEquilateral(const Color& color);
+        static Triangle CreateEquilateral(const GRAPHICS::Material* const material);
 
         // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
-        /// The color of the triangle.
-        GRAPHICS::Color Color = Color::BLACK;
+        /// The material of the triangle.  Stored externally for re-use
+        /// and cheap copying across many triangles.
+        /// @todo   Custom ExternalPointer<> or std::observer_ptr<>?
+        const GRAPHICS::Material* Material = nullptr;
         /// The vertices of the triangle.
         /// Should be in counter-clockwise order.
         std::array<MATH::Vector3f, VERTEX_COUNT> Vertices = {};

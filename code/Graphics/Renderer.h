@@ -31,5 +31,13 @@ namespace GRAPHICS
             const float end_y,
             const Color& color,
             RenderTarget& render_target) const;
+        void DrawLineWithInterpolatedColor(
+            const float start_x,
+            const float start_y,
+            const float end_x,
+            const float end_y,
+            const Color& start_color,
+            const Color& end_color,
+            RenderTarget& render_target) const;
     };
 }

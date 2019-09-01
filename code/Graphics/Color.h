@@ -26,6 +26,7 @@ namespace GRAPHICS
         static Color Unpack(const uint32_t packed_color, const ColorFormat color_format);
         static Color ScaleRedGreenBlue(const float scale_factor, const Color& color);
         static Color ComponentMultiplyRedGreenBlue(const Color& color_1, const Color& color_2);
+        static Color InterpolateRedGreenBlue(const Color& start_color, const Color& end_color, float ratio_toward_end);
         explicit Color(
             const float red,
             const float green,
@@ -56,13 +57,10 @@ namespace GRAPHICS
         // PACKING.
         uint32_t Pack(const ColorFormat color_format) const;
 
-    private:
-        // HELPER METHODS.
-        float ToFloatColorComponent(const uint8_t color_component_as_uint8) const;
-        uint8_t ToIntegerColorComponent(const float color_component_as_float) const;
+        // CLAMPING.
         void Clamp();
 
-        // MEMBER VARIABLES.
+        // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
         /// The red component of the color.
         float Red;
         /// The blue component of the color.
@@ -71,5 +69,10 @@ namespace GRAPHICS
         float Green;
         /// The alpha component of the color.
         float Alpha;
+
+    private:
+        // HELPER METHODS.
+        float ToFloatColorComponent(const uint8_t color_component_as_uint8) const;
+        uint8_t ToIntegerColorComponent(const float color_component_as_float) const;
     };
 }
