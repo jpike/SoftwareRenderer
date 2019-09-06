@@ -21,7 +21,7 @@ namespace GRAPHICS
         const float TOP_Y_WORLD_BOUNDARY = Camera.WorldPosition.Y + WORLD_HALF_SIZE;
         //const float NEAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 0.5f;
         //const float FAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 2.5f;
-        const float NEAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 50.0f;
+        const float NEAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 1.0f;
         const float FAR_Z_WORLD_BOUNDARY = Camera.WorldPosition.Z - 500.0f;
         MATH::Matrix4x4f orthographic_projection_transform = Camera::OrthographicProjection(
             LEFT_X_WORLD_BOUNDARY,
@@ -50,12 +50,13 @@ namespace GRAPHICS
             0.0f));
         MATH::Matrix4x4 screen_transform = translate_to_screen_center_transform * scale_to_screen_transform * flip_y_transform;
 
-        MATH::Matrix4x4f final_transform = screen_transform * perspective_projection_transform * camera_view_transform * object_world_transform;
+        //MATH::Matrix4x4f final_transform = screen_transform * perspective_projection_transform * camera_view_transform * object_world_transform;
 
         // RENDER EACH TRIANGLE OF THE OBJECT.
         for (const auto& local_triangle : object_3D.Triangles)
         {
             // TRANSFORM THE TRIANGLE INTO SCREEN-SPACE.
+            bool triangle_within_camera_z_boundaries = false;
             Triangle screen_space_triangle = local_triangle;
             for (auto& vertex : screen_space_triangle.Vertices)
             {
@@ -63,14 +64,37 @@ namespace GRAPHICS
                 // the opposite is true for the screen coordinates.
                 vertex.Y = -vertex.Y;
                 MATH::Vector4f homogeneous_vertex = MATH::Vector4f::HomogeneousPositionVector(vertex);
-                MATH::Vector4f transformed_vertex = final_transform * homogeneous_vertex;
+
+                MATH::Vector4f world_vertex = object_world_transform * homogeneous_vertex;
+                MATH::Vector4f view_vertex = camera_view_transform * world_vertex;
+                MATH::Vector4f projected_vertex = perspective_projection_transform * view_vertex;
+                MATH::Vector4f screen_vertex = screen_transform * projected_vertex;
+                MATH::Vector4f transformed_vertex = screen_vertex;
+
+                //MATH::Vector4f transformed_vertex = final_transform * homogeneous_vertex;
                 vertex = MATH::Vector3f(transformed_vertex.X, transformed_vertex.Y, transformed_vertex.Z);
                 // The vertex must be de-homogenized.
                 vertex = MATH::Vector3f::Scale(1.0f / transformed_vertex.W, vertex);
+
+                // @todo    I'm not sure this clipping is correct.  More study/testing needed.
+                bool vertex_within_camera_z_boundaries = 
+                    // The vertex must be within the boundaries of the camera's viewing planes.
+                    // Since these boundaries are facing along the negative z axis,
+                    // the far boundary is actually larger (less negative) than the near boundary.
+                    ((FAR_Z_WORLD_BOUNDARY <= world_vertex.Z) && (world_vertex.Z <= NEAR_Z_WORLD_BOUNDARY)) &&
+                    // Within the camera viewing plane's boundaries, the w coordinate should never be
+                    // greater than the z coordinate - that would indicate that we've basically
+                    // "flipped" the size of the viewing plane that we're on.  In those cases,
+                    // we must prevent incorrect (flipped) rendering.
+                    (std::abs(transformed_vertex.Z) >= std::abs(transformed_vertex.W));
+                triangle_within_camera_z_boundaries = (triangle_within_camera_z_boundaries || vertex_within_camera_z_boundaries);
             }
 
             // RENDER THE SCREEN-SPACE TRIANGLE.
-            Render(screen_space_triangle, render_target);
+            if (triangle_within_camera_z_boundaries)
+            {
+                Render(screen_space_triangle, render_target);
+            }
         }
     }
 

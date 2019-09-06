@@ -473,7 +473,7 @@ LRESULT CALLBACK MainWindowCallback(
             break;
     }
 
-        std::string camera_position;
+        std::string camera_position = "Camera Position: ";
         camera_position += std::to_string(g_renderer->Camera.WorldPosition.X) + ",";
         camera_position += std::to_string(g_renderer->Camera.WorldPosition.Y) + ",";
         camera_position += std::to_string(g_renderer->Camera.WorldPosition.Z) + "\n";
@@ -671,8 +671,8 @@ int CALLBACK WinMain(
     GRAPHICS::Object3D test_object_3D;
     test_object_3D.Triangles = { triangle };
     constexpr float OBJECT_SCALE = 50.0f;
-    test_object_3D.Scale = MATH::Vector3f(OBJECT_SCALE, OBJECT_SCALE, OBJECT_SCALE);
-    test_object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -2.0f);
+    test_object_3D.Scale = MATH::Vector3f(OBJECT_SCALE, OBJECT_SCALE, 1.0f);
+    test_object_3D.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
     objects.push_back(test_object_3D);
 #endif
 
@@ -682,7 +682,7 @@ int CALLBACK WinMain(
 
     GRAPHICS::Object3D cube = GRAPHICS::Cube::Create(&material);
     cube.Scale = MATH::Vector3f(10.0f, 10.0f, 10.0f);
-    cube.WorldPosition = MATH::Vector3f(0.0f, 0.0f, -2.0f);
+    cube.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
     objects.push_back(cube);
 #endif
 
@@ -781,6 +781,7 @@ int CALLBACK WinMain(
             std::this_thread::sleep_for(remaining_time_for_frame);
         }
 
+#if 0
         // Re-compute frame time to determine accuracy.
         frame_end_time = std::chrono::high_resolution_clock::now();
         //float total_elapsed_time = std::chrono::duration_cast<std::chrono::duration<float>>(current_time - frame_start_time).count();
@@ -797,6 +798,7 @@ int CALLBACK WinMain(
         frames_per_second = 1.0f / frame_elapsed_time_seconds.count();
         frames_per_second_string = std::to_string(frames_per_second) + " fps\n";
         OutputDebugStringA(frames_per_second_string.c_str());
+#endif
 #endif
     }
 #endif
