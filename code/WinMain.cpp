@@ -370,6 +370,7 @@ LRESULT CALLBACK MainWindowCallback(
     case WM_KEYDOWN:
     {
         const float move_speed = 1.0f;
+        constexpr float ROTATE_SPEED_IN_DEGREES = 1.0f;
         int virtual_key_code = static_cast<int>(w_param);
         switch (virtual_key_code)
         {
@@ -471,6 +472,22 @@ LRESULT CALLBACK MainWindowCallback(
         case 0x53: // S
             g_renderer->Camera.WorldPosition.Z += move_speed;
             break;
+        case 0x41: // A
+        {
+            MATH::Angle<float>::Degrees degrees(-ROTATE_SPEED_IN_DEGREES);
+            MATH::Matrix4x4f rotation_matrix = MATH::Matrix4x4f::RotateY(MATH::Angle<float>::DegreesToRadians(degrees));
+            MATH::Vector4f transformed_position = rotation_matrix * MATH::Vector4f::HomogeneousPositionVector(g_renderer->Camera.WorldPosition);
+            g_renderer->Camera.WorldPosition = MATH::Vector3f(transformed_position.X, transformed_position.Y, transformed_position.Z);
+            break;
+        }
+        case 0x44: // D
+        {
+            MATH::Angle<float>::Degrees degrees(ROTATE_SPEED_IN_DEGREES);
+            MATH::Matrix4x4f rotation_matrix = MATH::Matrix4x4f::RotateY(MATH::Angle<float>::DegreesToRadians(degrees));
+            MATH::Vector4f transformed_position = rotation_matrix * MATH::Vector4f::HomogeneousPositionVector(g_renderer->Camera.WorldPosition);
+            g_renderer->Camera.WorldPosition = MATH::Vector3f(transformed_position.X, transformed_position.Y, transformed_position.Z);
+            break;
+        }
     }
 
         std::string camera_position = "Camera Position: ";
