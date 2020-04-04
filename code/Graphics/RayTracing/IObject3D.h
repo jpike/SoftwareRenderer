@@ -13,6 +13,9 @@ namespace RAY_TRACING
     class IObject3D
     {
     public:
+        /// Defaulted destructor to allow instantiation in unique pointers.
+        virtual ~IObject3D() = default;
+
         /// Computes the surface normal of the object at given point.
         /// @param[in]  surface_point - The point on the object's surface at which to compute a normal.
         /// @return The unit surface normal at the specified point.

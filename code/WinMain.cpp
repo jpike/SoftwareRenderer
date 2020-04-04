@@ -34,6 +34,7 @@ static std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> g_scene = nullptr;
 static GRAPHICS::RAY_TRACING::RayTracingAlgorithm* g_ray_tracer = nullptr;
 static GRAPHICS::RenderTarget* g_render_target = nullptr;
 
+#if USE_RAY_TRACING
 std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int scene_number)
 {
     switch (scene_number)
@@ -331,6 +332,7 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
         return nullptr;
     }
 }
+#endif
 
 /// The main window callback procedure for processing messages sent to the main application window.
 /// @param[in]  window - Handle to the window.
@@ -580,6 +582,7 @@ int CALLBACK WinMain(
     GRAPHICS::RenderTarget render_target(SCREEN_WIDTH_IN_PIXELS, SCREEN_HEIGHT_IN_PIXELS, GRAPHICS::ColorFormat::ARGB);
 
     // CREATE A SCENE.
+#if USE_RAY_TRACING
     g_scene = CreateScene(0);
 
     // PERFORM RAY TRACING.
@@ -591,6 +594,7 @@ int CALLBACK WinMain(
 
     g_render_target = &render_target;
     g_ray_tracer = &ray_tracer;
+#endif
 
 #if USE_RAY_TRACING
     bool running = true;
