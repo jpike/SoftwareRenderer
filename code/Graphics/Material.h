@@ -8,11 +8,13 @@ namespace GRAPHICS
     /// The different kinds of shading that are supported.
     enum class ShadingType
     {
-        INVALID = 0,
-        WIREFRAME,
+        /// Defaults to wireframe to ensure at least something gets rendered.
+        WIREFRAME = 0,
         WIREFRAME_VERTEX_COLOR_INTERPOLATION,
         FLAT,
         FACE_VERTEX_COLOR_INTERPOLATION,
+        /// An extra enum to indicate the number of different shading types.
+        COUNT
     };
 
     /// A material defining properties of a surface and how it's shaded.
@@ -20,7 +22,7 @@ namespace GRAPHICS
     {
     public:
         /// The type of shading for the material.
-        ShadingType Shading = ShadingType::INVALID;
+        ShadingType Shading = ShadingType::WIREFRAME;
 
         /// The color of an edge, if wireframe shading is used.
         GRAPHICS::Color WireframeColor = GRAPHICS::Color::BLACK;
