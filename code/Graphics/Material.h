@@ -8,10 +8,14 @@ namespace GRAPHICS
     /// The different kinds of shading that are supported.
     enum class ShadingType
     {
+        /// Objects are rendered as wireframes with a single color.
         /// Defaults to wireframe to ensure at least something gets rendered.
         WIREFRAME = 0,
+        /// Objects are rendered as wireframes with colors interpolated across vertices.
         WIREFRAME_VERTEX_COLOR_INTERPOLATION,
+        /// Objects are rendered with a solid, flat color.
         FLAT,
+        /// Objects are rendered with colors interpolated across vertices across the entire face.
         FACE_VERTEX_COLOR_INTERPOLATION,
         /// An extra enum to indicate the number of different shading types.
         COUNT
