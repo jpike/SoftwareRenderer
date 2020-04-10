@@ -646,8 +646,8 @@ LRESULT CALLBACK MainWindowCallback(
             break;
         case WM_KEYDOWN:
         {
-            const float move_speed = 1.0f;
-            constexpr float ROTATE_SPEED_IN_DEGREES = 1.0f;
+            const float CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS = 1.0f;
+            constexpr float CAMERA_ROTATE_DEGREES_PER_KEY_PRESS = 1.0f;
             int virtual_key_code = static_cast<int>(w_param);
             switch (virtual_key_code)
             {
@@ -667,37 +667,63 @@ LRESULT CALLBACK MainWindowCallback(
                     break;
                 }
                 case VK_UP:
-                    g_renderer->Camera.WorldPosition.Y += move_speed;
+                    g_renderer->Camera.WorldPosition.Y += CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;
                     break;
                 case VK_DOWN:
-                    g_renderer->Camera.WorldPosition.Y -= move_speed;
+                    g_renderer->Camera.WorldPosition.Y -= CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;
                     break;
                 case VK_LEFT:
-                    g_renderer->Camera.WorldPosition.X -= move_speed;
+                    g_renderer->Camera.WorldPosition.X -= CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;
                     break;
                 case VK_RIGHT:
-                    g_renderer->Camera.WorldPosition.X += move_speed;
+                    g_renderer->Camera.WorldPosition.X += CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;
                     break;
                 case 0x57: // W
-                    g_renderer->Camera.WorldPosition.Z -= move_speed;
+                    g_renderer->Camera.WorldPosition.Z -= CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;
                     break;
                 case 0x53: // S
-                    g_renderer->Camera.WorldPosition.Z += move_speed;
+                    g_renderer->Camera.WorldPosition.Z += CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;
                     break;
                 case 0x41: // A
                 {
-                    MATH::Angle<float>::Degrees degrees(-ROTATE_SPEED_IN_DEGREES);
+                    /// @todo   These rotation angles seem backward...maybe should more specifically work out math?
+                    MATH::Angle<float>::Degrees degrees(CAMERA_ROTATE_DEGREES_PER_KEY_PRESS);
                     MATH::Matrix4x4f rotation_matrix = MATH::Matrix4x4f::RotateY(MATH::Angle<float>::DegreesToRadians(degrees));
                     MATH::Vector4f transformed_position = rotation_matrix * MATH::Vector4f::HomogeneousPositionVector(g_renderer->Camera.WorldPosition);
+                    /// @todo   This is a bit of a hack, but it works nicely.  Probably want to simplify camera.
                     g_renderer->Camera.WorldPosition = MATH::Vector3f(transformed_position.X, transformed_position.Y, transformed_position.Z);
+                    g_renderer->Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(), g_renderer->Camera.WorldPosition);
                     break;
                 }
                 case 0x44: // D
                 {
-                    MATH::Angle<float>::Degrees degrees(ROTATE_SPEED_IN_DEGREES);
+                    /// @todo   These rotation angles seem backward...maybe should more specifically work out math?
+                    MATH::Angle<float>::Degrees degrees(-CAMERA_ROTATE_DEGREES_PER_KEY_PRESS);
                     MATH::Matrix4x4f rotation_matrix = MATH::Matrix4x4f::RotateY(MATH::Angle<float>::DegreesToRadians(degrees));
                     MATH::Vector4f transformed_position = rotation_matrix * MATH::Vector4f::HomogeneousPositionVector(g_renderer->Camera.WorldPosition);
+                    /// @todo   This is a bit of a hack, but it works nicely.  Probably want to simplify camera.
                     g_renderer->Camera.WorldPosition = MATH::Vector3f(transformed_position.X, transformed_position.Y, transformed_position.Z);
+                    g_renderer->Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(), g_renderer->Camera.WorldPosition);
+                    break;
+                }
+                case 0x51: // Q
+                {
+                    MATH::Angle<float>::Degrees degrees(CAMERA_ROTATE_DEGREES_PER_KEY_PRESS);
+                    MATH::Matrix4x4f rotation_matrix = MATH::Matrix4x4f::RotateX(MATH::Angle<float>::DegreesToRadians(degrees));
+                    MATH::Vector4f transformed_position = rotation_matrix * MATH::Vector4f::HomogeneousPositionVector(g_renderer->Camera.WorldPosition);
+                    /// @todo   This is a bit of a hack, but it works nicely.  Probably want to simplify camera.
+                    g_renderer->Camera.WorldPosition = MATH::Vector3f(transformed_position.X, transformed_position.Y, transformed_position.Z);
+                    g_renderer->Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(), g_renderer->Camera.WorldPosition);
+                    break;
+                }
+                case 0x5A: // Z
+                {
+                    MATH::Angle<float>::Degrees degrees(-CAMERA_ROTATE_DEGREES_PER_KEY_PRESS);
+                    MATH::Matrix4x4f rotation_matrix = MATH::Matrix4x4f::RotateX(MATH::Angle<float>::DegreesToRadians(degrees));
+                    MATH::Vector4f transformed_position = rotation_matrix * MATH::Vector4f::HomogeneousPositionVector(g_renderer->Camera.WorldPosition);
+                    /// @todo   This is a bit of a hack, but it works nicely.  Probably want to simplify camera.
+                    g_renderer->Camera.WorldPosition = MATH::Vector3f(transformed_position.X, transformed_position.Y, transformed_position.Z);
+                    g_renderer->Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(), g_renderer->Camera.WorldPosition);
                     break;
                 }
             }
@@ -869,10 +895,14 @@ int CALLBACK WinMain(
     g_objects.push_back(cube);
 
     // RUN A MESSAGE LOOP.
+#define ROTATE_OBJECTS 1
+#if ROTATE_OBJECTS
+    float object_rotation_angle_in_radians = 0.0f;
+#endif
+
     constexpr float TARGET_FRAMES_PER_SECOND = 60.0f;
     constexpr std::chrono::duration<float, std::chrono::seconds::period> TARGET_SECONDS_PER_FRAME(1.0f / TARGET_FRAMES_PER_SECOND);
     auto start_time = std::chrono::high_resolution_clock::now();
-    float object_rotation_angle_in_radians = 0.0f;
     bool running = true;
     while (running)
     {
@@ -913,7 +943,6 @@ int CALLBACK WinMain(
             DispatchMessage(&message);
         }
 
-#define ROTATE_OBJECTS 1
 #if ROTATE_OBJECTS
         // ROTATE ANY OBJECT IN THE SCENE.
         auto current_time = std::chrono::high_resolution_clock::now();
