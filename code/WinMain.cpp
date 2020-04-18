@@ -816,7 +816,7 @@ int CALLBACK WinMain(
     }
 
     // LOAD THE DEFAULT FONT.
-    std::optional<GRAPHICS::GUI::Font> font = GRAPHICS::GUI::Font::LoadSystemDefaultFixedFont();
+    std::shared_ptr<GRAPHICS::GUI::Font> font = GRAPHICS::GUI::Font::LoadSystemDefaultFixedFont();
     if (!font)
     {
         OutputDebugString("Failed to load default font.");
@@ -975,6 +975,46 @@ int CALLBACK WinMain(
             g_renderer->Render(object_3D, render_target);
         }
 
+#define RENDER_GUI_TEXT 1
+#if RENDER_GUI_TEXT
+        GRAPHICS::GUI::Text text =
+        {
+            .String = "In the beginning was the Word, and the Word was with God, and the Word was God.",
+            .Font = &*font,
+            .LeftTopPosition = MATH::Vector2f(0.0f, 0.0f)
+        };
+        g_renderer->Render(text, render_target);
+#endif
+
+#define RENDER_ALL_FONT_CHARACTERS 0
+#if RENDER_ALL_FONT_CHARACTERS
+        unsigned int base_x = 0;
+        unsigned int base_y = 0;
+        for (unsigned int character = 0; character < GRAPHICS::GUI::Font::CHARACTER_COUNT; ++character)
+        {
+            const GRAPHICS::GUI::Glyph& glyph = font->GlyphsByCharacter[character];
+            for (unsigned int y = 0; y < glyph.HeightInPixels; ++y)
+            {
+                for (unsigned int x = 0; x < glyph.WidthInPixels; ++x)
+                {
+                    GRAPHICS::Color color = glyph.GetPixelColor(x, y);
+                    if (color.Alpha)
+                    {
+                        render_target.WritePixel(x + base_x, y + base_y, color);
+                    }
+                }
+            }
+
+            base_x += glyph.WidthInPixels;
+            if (base_x > GRAPHICS::GUI::Font::GLYPH_BITMAP_DIMENSION_IN_PIXELS)
+            {
+                base_x = 0;
+                base_y += glyph.HeightInPixels;
+            }
+        }
+#endif
+#define RENDER_FONT_OLD 0
+#if RENDER_FONT_OLD
         for (unsigned int y = 0; y < font->GLYPH_BITMAP_DIMENSION_IN_PIXELS; ++y)
         {
             for (unsigned int x = 0; x < font->GLYPH_BITMAP_DIMENSION_IN_PIXELS; ++x)
@@ -986,6 +1026,7 @@ int CALLBACK WinMain(
                 }
             }
         }
+#endif
 
         // DISPLAY THE RENDERED OBJECTS IN THE WINDOW.
         g_window->Display(render_target);

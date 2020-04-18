@@ -1,7 +1,9 @@
 #pragma once
 
-#include <optional>
+#include <array>
+#include <memory>
 #include <Windows.h>
+#include "Graphics/Gui/Glyph.h"
 #include "Graphics/RenderTarget.h"
 
 /// Holds code related to standard GUIs (graphical user interfaces - https://en.wikipedia.org/wiki/Graphical_user_interface).
@@ -18,11 +20,9 @@ namespace GRAPHICS::GUI
     class Font
     {
     public:
-        // CONSTRUCTION.
-        static std::optional<Font> LoadSystemDefaultFixedFont();
-
-    //private:
         // STATIC CONSTANTS.
+        /// The total number of characters supported by the font.
+        static constexpr unsigned int CHARACTER_COUNT = 256;
         /// The dimension (width or height) of a single glyph, in pixels.
         static constexpr unsigned int GLYPH_DIMENSION_IN_PIXELS = 16;
         /// The number of glyphs in a single row or column of the font's bitmap.
@@ -30,11 +30,12 @@ namespace GRAPHICS::GUI
         /// The dimension (width or height) of the glyph bitmap, in pixels.
         static constexpr unsigned int GLYPH_BITMAP_DIMENSION_IN_PIXELS = GLYPH_DIMENSION_IN_PIXELS * GLYPH_COUNT_PER_ROW_OR_COLUMN;
 
+        // CONSTRUCTION.
+        static std::shared_ptr<Font> LoadSystemDefaultFixedFont();
+
         // MEMBER VARIABLES.
-        /// The operating system handle to the font.
-        HGDIOBJ Handle = nullptr;
-        /// Metrics about the font.
-        TEXTMETRIC TextMetrics = {};
+        /// The glyphs as stored by regular unsigned ASCII character value.
+        std::array<Glyph, CHARACTER_COUNT> GlyphsByCharacter = {};
         /// The pixels for the font.
         /// The color format is chosen to be compatible with the format used by Windows by default.
         RenderTarget Pixels = RenderTarget(GLYPH_BITMAP_DIMENSION_IN_PIXELS, GLYPH_BITMAP_DIMENSION_IN_PIXELS, ColorFormat::ARGB);

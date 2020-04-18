@@ -4,6 +4,46 @@
 
 namespace GRAPHICS
 {
+    /// Renders some text onto the render target.
+    /// @param[in]  text - The text to render.
+    /// @param[in,out]  render_target - The target to render to.
+    void Renderer::Render(const GUI::Text& text, RenderTarget& render_target) const
+    {
+        // MAKE SURE A FONT EXISTS.
+        if (!text.Font)
+        {
+            return;
+        }
+
+        // RENDER A GLYPH FOR EACH CHARACTER.
+        unsigned int current_glyph_left_x_position = static_cast<unsigned int>(text.LeftTopPosition.X);
+        unsigned int current_glyph_top_y_position = static_cast<unsigned int>(text.LeftTopPosition.Y);
+        for (char character : text.String)
+        {
+            // RENDER ALL PIXELS FOR THE CURRENT GLYPH.
+            const GUI::Glyph& glyph = text.Font->GlyphsByCharacter[static_cast<unsigned char>(character)];
+            for (unsigned int glyph_local_pixel_y_position = 0; glyph_local_pixel_y_position < glyph.HeightInPixels; ++glyph_local_pixel_y_position)
+            {
+                for (unsigned int glyph_local_pixel_x_position = 0; glyph_local_pixel_x_position < glyph.WidthInPixels; ++glyph_local_pixel_x_position)
+                {
+                    // ONLY WRITE THE PIXEL IF IT IS VISIBLE.
+                    /// @todo   Fancier alpha blending?
+                    GRAPHICS::Color pixel_color = glyph.GetPixelColor(glyph_local_pixel_x_position, glyph_local_pixel_y_position);
+                    bool pixel_visible = (pixel_color.Alpha > 0);
+                    if (pixel_visible)
+                    {
+                        unsigned int glyph_destination_x_position = current_glyph_left_x_position + glyph_local_pixel_x_position;
+                        unsigned int glyph_destination_y_position = current_glyph_top_y_position + glyph_local_pixel_y_position;
+                        render_target.WritePixel(glyph_destination_x_position, glyph_destination_y_position, pixel_color);
+                    }
+                }
+            }
+
+            // MOVE TO THE NEXT GLYPH.
+            current_glyph_left_x_position += glyph.WidthInPixels;
+        }
+    }
+
     /// Renders a 3D object to the render target.
     /// @param[in]  object_3D - The object to render.
     /// @param[in,out]  render_target - The target to render to.

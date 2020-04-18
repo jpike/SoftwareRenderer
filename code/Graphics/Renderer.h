@@ -3,6 +3,7 @@
 #include <vector>
 #include "Graphics/Camera.h"
 #include "Graphics/Color.h"
+#include "Graphics/Gui/Text.h"
 #include "Graphics/Object3D.h"
 #include "Graphics/RenderTarget.h"
 #include "Graphics/Triangle.h"
@@ -14,6 +15,7 @@ namespace GRAPHICS
     {
     public:
         // RENDERING.
+        void Render(const GUI::Text& text, RenderTarget& render_target) const;
         void Render(const Object3D& object_3D, RenderTarget& render_target) const;
 
         // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
