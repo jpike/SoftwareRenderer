@@ -58,6 +58,25 @@ namespace GRAPHICS
     /// Fills in color of the pixel at the specified coordinates.
     /// @param[in]  x - The horizontal coordinate of the pixel.
     /// @param[in]  y - The vertical coorindate of the pixel.
+    /// @param[in]  color - The color to write to the pixel, already in 32-bit packed
+    ///     format according to the color format specified for the render target.
+    void RenderTarget::WritePixel(const unsigned int x, const unsigned int y, const uint32_t& color)
+    {
+        // MAKE SURE THE PIXEL COORDINATES ARE VALID.
+        bool pixel_coordinates_valid = Pixels.IndicesInRange(x, y);
+        if (!pixel_coordinates_valid)
+        {
+            // The pixel can't be written.
+            return;
+        }
+
+        // FILL IN THE COLOR COMPONENTS OF THE PIXEL.
+        Pixels(x, y) = color;
+    }
+
+    /// Fills in color of the pixel at the specified coordinates.
+    /// @param[in]  x - The horizontal coordinate of the pixel.
+    /// @param[in]  y - The vertical coorindate of the pixel.
     /// @param[in]  color - The color to write to the pixel.
     void RenderTarget::WritePixel(const unsigned int x, const unsigned int y, const Color& color)
     {

@@ -32,6 +32,7 @@ namespace GRAPHICS
         GRAPHICS::Color GetPixel(const unsigned int x, const unsigned int y) const;
 
         // DRAWING.
+        void WritePixel(const unsigned int x, const unsigned int y, const uint32_t& color);
         void WritePixel(const unsigned int x, const unsigned int y, const Color& color);
         void FillPixels(const Color& color);
 

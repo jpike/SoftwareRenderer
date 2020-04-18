@@ -1,6 +1,10 @@
+// To avoid annoyances with Windows min/max #defines.
+#define NOMINMAX
+
 #include "Graphics/Camera.cpp"
 #include "Graphics/Color.cpp"
 #include "Graphics/Cube.cpp"
+#include "Graphics/Gui/Font.cpp"
 #include "Graphics/Object3D.cpp"
 #include "Graphics/RayTracing/PointLight.cpp"
 #include "Graphics/RayTracing/Ray.cpp"

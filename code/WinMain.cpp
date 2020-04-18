@@ -12,6 +12,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <random>
 #include <string>
 #include <thread>
@@ -19,6 +20,7 @@
 #include <Windows.h>
 #include "Graphics/Camera.h"
 #include "Graphics/Cube.h"
+#include "Graphics/Gui/Font.h"
 #include "Graphics/Object3D.h"
 #include "Graphics/RayTracing/Material.h"
 #include "Graphics/RayTracing/PointLight.h"
@@ -813,6 +815,14 @@ int CALLBACK WinMain(
         return EXIT_FAILURE;
     }
 
+    // LOAD THE DEFAULT FONT.
+    std::optional<GRAPHICS::GUI::Font> font = GRAPHICS::GUI::Font::LoadSystemDefaultFixedFont();
+    if (!font)
+    {
+        OutputDebugString("Failed to load default font.");
+        return EXIT_FAILURE;
+    }
+
     // CREATE THE MAIN RENDER TARGET.
     GRAPHICS::RenderTarget render_target(SCREEN_WIDTH_IN_PIXELS, SCREEN_HEIGHT_IN_PIXELS, GRAPHICS::ColorFormat::ARGB);
 
@@ -963,6 +973,18 @@ int CALLBACK WinMain(
         for (auto object_3D : g_objects)
         {
             g_renderer->Render(object_3D, render_target);
+        }
+
+        for (unsigned int y = 0; y < font->GLYPH_BITMAP_DIMENSION_IN_PIXELS; ++y)
+        {
+            for (unsigned int x = 0; x < font->GLYPH_BITMAP_DIMENSION_IN_PIXELS; ++x)
+            {
+                auto font_color = font->Pixels.GetPixel(x, y);
+                if (font_color.Alpha > 0)
+                {
+                    render_target.WritePixel(x, y, font_color);
+                }
+            }
         }
 
         // DISPLAY THE RENDERED OBJECTS IN THE WINDOW.
