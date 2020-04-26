@@ -21,6 +21,7 @@
 #include "Graphics/Camera.h"
 #include "Graphics/Cube.h"
 #include "Graphics/Gui/Font.h"
+#include "Graphics/Modeling/WavefrontObjectModel.h"
 #include "Graphics/Object3D.h"
 #include "Graphics/RayTracing/Material.h"
 #include "Graphics/RayTracing/PointLight.h"
@@ -903,6 +904,18 @@ int CALLBACK WinMain(
     cube.Scale = MATH::Vector3f(10.0f, 10.0f, 10.0f);
     cube.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
     g_objects.push_back(cube);
+
+    // LOAD A CUBE FROM FILE.
+    std::optional<GRAPHICS::Object3D> cube_from_file = GRAPHICS::MODELING::WavefrontObjectModel::Load("../assets/default_cube.obj");
+    if (cube_from_file)
+    {
+        /// @todo   Need to support proper material loading.
+        for (auto& loaded_triangle : cube_from_file->Triangles)
+        {
+            loaded_triangle.Material = &default_material;
+        }
+        g_objects.push_back(*cube_from_file);
+    }
 
     // RUN A MESSAGE LOOP.
 #define ROTATE_OBJECTS 1

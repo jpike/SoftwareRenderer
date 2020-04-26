@@ -6,6 +6,8 @@
 #include "Graphics/Cube.cpp"
 #include "Graphics/Gui/Font.cpp"
 #include "Graphics/Gui/Glyph.cpp"
+#include "Graphics/Modeling/WavefrontMaterial.cpp"
+#include "Graphics/Modeling/WavefrontObjectModel.cpp"
 #include "Graphics/Object3D.cpp"
 #include "Graphics/RayTracing/PointLight.cpp"
 #include "Graphics/RayTracing/Ray.cpp"
