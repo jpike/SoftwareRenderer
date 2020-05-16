@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 #include "Graphics/Modeling/WavefrontObjectModel.h"
 #include "Graphics/Modeling/WavefrontMaterial.h"
@@ -27,6 +28,7 @@ namespace GRAPHICS::MODELING
         constexpr char SPACE_SEPARATOR = ' ';
         std::vector<std::filesystem::path> material_filenames;
         std::vector<MATH::Vector3f> vertices;
+        std::vector< std::tuple<std::size_t, std::size_t, std::size_t> > face_vertex_indices;
         std::string line;
         while (std::getline(obj_file, line))
         {
@@ -131,13 +133,53 @@ namespace GRAPHICS::MODELING
                 continue;
             }
 
-            /// @todo   What to do with face lines?
-            /// They seem to be for quadrilaterals, not triangles.
             constexpr char FACE_INDICATOR = 'f';
             bool is_face_line = line.starts_with(FACE_INDICATOR);
             if (is_face_line)
             {
-                continue;
+                // The line has the following format:
+                // f v1_index/vt1_index/vn1_index v2_index/vt2_index/vn2_index v3_index/vt3_index/vn3_index
+
+                /// @todo   Make this more efficient.
+                std::istringstream line_data(line);
+                // Skip past the face data type indicator.
+                std::string face_data_type_indicator;
+                line_data >> face_data_type_indicator;
+
+                /// @todo   Make the below more robust and read in all indices.
+
+                std::string first_vertex_indices;
+                line_data >> first_vertex_indices;
+
+                constexpr char VERTEX_INDEX_DELIMITER = '/';
+                std::size_t first_vertex_delimiter_position = first_vertex_indices.find(VERTEX_INDEX_DELIMITER);
+                std::string first_vertex_index_string = first_vertex_indices.substr(0, first_vertex_delimiter_position);
+                std::size_t first_vertex_index = std::stoul(first_vertex_index_string);
+
+                // The vertex indices in the file start at 1, rather than 0.
+                constexpr std::size_t VERTEX_INDEX_OFFSET = 1;
+                first_vertex_index -= VERTEX_INDEX_OFFSET;
+
+                std::string second_vertex_indices;
+                line_data >> second_vertex_indices;
+
+                std::size_t second_vertex_delimiter_position = second_vertex_indices.find(VERTEX_INDEX_DELIMITER);
+                std::string second_vertex_index_string = second_vertex_indices.substr(0, second_vertex_delimiter_position);
+                std::size_t second_vertex_index = std::stoul(second_vertex_index_string);
+
+                second_vertex_index -= VERTEX_INDEX_OFFSET;
+
+                std::string third_vertex_indices;
+                line_data >> third_vertex_indices;
+
+                std::size_t third_vertex_delimiter_position = third_vertex_indices.find(VERTEX_INDEX_DELIMITER);
+                std::string third_vertex_index_string = third_vertex_indices.substr(0, third_vertex_delimiter_position);
+                std::size_t third_vertex_index = std::stoul(third_vertex_index_string);
+
+                third_vertex_index -= VERTEX_INDEX_OFFSET;
+
+                auto face_indices = std::make_tuple(first_vertex_index, second_vertex_index, third_vertex_index);
+                face_vertex_indices.push_back(face_indices);
             }
         }
 
@@ -157,27 +199,24 @@ namespace GRAPHICS::MODELING
 
         // FORM THE FINAL OBJECT.
         Object3D object_3d;
-        
-        /// @todo   Need to do triangulation.
-        std::size_t current_triangle_vertex_count = 0;
-        Triangle current_triangle;
-        for (const MATH::Vector3f& vertex : vertices)
+        for (const std::tuple<std::size_t, std::size_t, std::size_t>& face : face_vertex_indices)
         {
-            // CHECK IF THE CURRENT TRIANGLE HAS ROOM FOR THE VERTEX.
-            bool triangle_has_room_for_vertex = (current_triangle_vertex_count < Triangle::VERTEX_COUNT);
-            if (!triangle_has_room_for_vertex)
-            {
-                // STORE THE CURRENT TRIANGLE IN THE MODEL.
-                /// @todo   Need to have way to push final triangle with last vertex.
-                object_3d.Triangles.push_back(current_triangle);
+            // GET THE VERTICES.
+            MATH::Vector3f first_vertex = vertices.at(std::get<0>(face));
+            MATH::Vector3f second_vertex = vertices.at(std::get<1>(face));
+            MATH::Vector3f third_vertex = vertices.at(std::get<2>(face));
 
-                // START A NEW TRIANGLE.
-                current_triangle_vertex_count = 0;
-            }
-            
-            // ADD THE VERTEX TO THE TRIANGLE.
-            current_triangle.Vertices[current_triangle_vertex_count] = vertex;
-            ++current_triangle_vertex_count;
+            // ADD THE CURRENT TRIANGLE.
+            Triangle triangle =
+            {
+                .Vertices = 
+                {
+                    first_vertex,
+                    second_vertex,
+                    third_vertex
+                }
+            };
+            object_3d.Triangles.push_back(triangle);
 
             /// @todo   How to handle materials?  Need some kind of permanent storage.
         }

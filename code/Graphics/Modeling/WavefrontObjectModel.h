@@ -11,6 +11,7 @@ namespace GRAPHICS::MODELING
     /// This is generally the simplest widely-supported 3D model format that is readable as plain text.
     /// This class is named based on the "model" concept rather than a "file" concept since
     /// a 3D model may include additional files such as a .mtl material file.
+    /// This class only supports files with triangulated faces (not quads).
     class WavefrontObjectModel
     {
     public:
