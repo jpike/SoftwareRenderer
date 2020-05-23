@@ -46,8 +46,9 @@ namespace GRAPHICS
 
     /// Renders a 3D object to the render target.
     /// @param[in]  object_3D - The object to render.
+    /// @param[in]  lights - Any lights that should illuminate the object.
     /// @param[in,out]  render_target - The target to render to.
-    void Renderer::Render(const Object3D& object_3D, RenderTarget& render_target) const
+    void Renderer::Render(const Object3D& object_3D, const std::vector<Light>& lights, RenderTarget& render_target) const
     {
         // COMPUTE THE FINAL TRANSFORMATION MATRIX FOR THE OBJECT.
         MATH::Matrix4x4f object_world_transform = object_3D.WorldTransform();
@@ -133,15 +134,16 @@ namespace GRAPHICS
             // RENDER THE SCREEN-SPACE TRIANGLE.
             if (triangle_within_camera_z_boundaries)
             {
-                Render(screen_space_triangle, render_target);
+                Render(screen_space_triangle, lights, render_target);
             }
         }
     }
 
     /// Renders a single triangle to the render target.
     /// @param[in]  triangle - The triangle to render (in screen-space coordinates).
+    /// @param[in]  lights - Any lights illuminating the triangle.
     /// @param[in,out]  render_target - The target to render to.
-    void Renderer::Render(const Triangle& triangle, RenderTarget& render_target) const
+    void Renderer::Render(const Triangle& triangle, const std::vector<Light>& lights, RenderTarget& render_target) const
     {
         // GET THE VERTICES.
         // They're needed for all kinds of shading.
@@ -154,13 +156,25 @@ namespace GRAPHICS
         {
             case ShadingType::WIREFRAME:
             {
+                // COMPUTE THE COLOR BASED ON LIGHTING.
+                Color wireframe_color = triangle.Material->WireframeColor;
+                for (const Light& light : lights)
+                {
+                    // COMPUTE SHADING BASED ON TYPE OF LIGHT.
+                    if (LightType::AMBIENT == light.Type)
+                    {
+                        /// @todo   Should this be multiplicative or additive?
+                        wireframe_color = Color::ComponentMultiplyRedGreenBlue(wireframe_color, light.AmbientColor);
+                    }
+                }
+
                 // DRAW THE FIRST EDGE.
                 DrawLine(
                     first_vertex.X,
                     first_vertex.Y,
                     second_vertex.X,
                     second_vertex.Y,
-                    triangle.Material->WireframeColor,
+                    wireframe_color,
                     render_target);
 
                 // DRAW THE SECOND EDGE.
@@ -169,7 +183,7 @@ namespace GRAPHICS
                     second_vertex.Y,
                     third_vertex.X,
                     third_vertex.Y,
-                    triangle.Material->WireframeColor,
+                    wireframe_color,
                     render_target);
 
                 // DRAW THE THIRD EDGE.
@@ -178,20 +192,36 @@ namespace GRAPHICS
                     third_vertex.Y,
                     first_vertex.X,
                     first_vertex.Y,
-                    triangle.Material->WireframeColor,
+                    wireframe_color,
                     render_target);
                 break;
             }
             case ShadingType::WIREFRAME_VERTEX_COLOR_INTERPOLATION:
             {
+                // COMPUTE THE COLORS BASED ON LIGHTING.
+                Color vertex_0_wireframe_color = triangle.Material->VertexWireframeColors[0];
+                Color vertex_1_wireframe_color = triangle.Material->VertexWireframeColors[1];
+                Color vertex_2_wireframe_color = triangle.Material->VertexWireframeColors[2];
+                for (const Light& light : lights)
+                {
+                    // COMPUTE SHADING BASED ON TYPE OF LIGHT.
+                    if (LightType::AMBIENT == light.Type)
+                    {
+                        /// @todo   Should this be multiplicative or additive?
+                        vertex_0_wireframe_color = Color::ComponentMultiplyRedGreenBlue(vertex_0_wireframe_color, light.AmbientColor);
+                        vertex_1_wireframe_color = Color::ComponentMultiplyRedGreenBlue(vertex_1_wireframe_color, light.AmbientColor);
+                        vertex_2_wireframe_color = Color::ComponentMultiplyRedGreenBlue(vertex_2_wireframe_color, light.AmbientColor);
+                    }
+                }
+
                 // DRAW THE FIRST EDGE.
                 DrawLineWithInterpolatedColor(
                     first_vertex.X,
                     first_vertex.Y,
                     second_vertex.X,
                     second_vertex.Y,
-                    triangle.Material->VertexWireframeColors[0],
-                    triangle.Material->VertexWireframeColors[1],
+                    vertex_0_wireframe_color,
+                    vertex_1_wireframe_color,
                     render_target);
 
                 // DRAW THE SECOND EDGE.
@@ -200,8 +230,8 @@ namespace GRAPHICS
                     second_vertex.Y,
                     third_vertex.X,
                     third_vertex.Y,
-                    triangle.Material->VertexWireframeColors[1],
-                    triangle.Material->VertexWireframeColors[2],
+                    vertex_1_wireframe_color,
+                    vertex_2_wireframe_color,
                     render_target);
 
                 // DRAW THE THIRD EDGE.
@@ -210,8 +240,8 @@ namespace GRAPHICS
                     third_vertex.Y,
                     first_vertex.X,
                     first_vertex.Y,
-                    triangle.Material->VertexWireframeColors[2],
-                    triangle.Material->VertexWireframeColors[0],
+                    vertex_2_wireframe_color,
+                    vertex_0_wireframe_color,
                     render_target);
                 break;
             }
@@ -286,12 +316,25 @@ namespace GRAPHICS
                             pixel_between_right_edge_and_left_vertex);
                         if (pixel_in_triangle)
                         {
+                            // COMPUTE THE COLOR BASED ON LIGHTING.
+                            Color face_color = triangle.Material->FaceColor;
+                            for (const Light& light : lights)
+                            {
+                                // COMPUTE SHADING BASED ON TYPE OF LIGHT.
+                                if (LightType::AMBIENT == light.Type)
+                                {
+                                    /// @todo   Should this be multiplicative or additive?
+                                    face_color = Color::ComponentMultiplyRedGreenBlue(face_color, light.AmbientColor);
+                                }
+                            }
+
+                            // DRAW THE COLORED PIXEL.
                             // The coordinates need to be rounded to integer in order
                             // to plot a pixel on a fixed grid.
                             render_target.WritePixel(
                                 static_cast<unsigned int>(std::round(x)),
                                 static_cast<unsigned int>(std::round(y)),
-                                triangle.Material->FaceColor);
+                                face_color);
                         }
                     }
                 }
@@ -387,6 +430,17 @@ namespace GRAPHICS
                                 (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_vertex_color.Blue) +
                                 (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_vertex_color.Blue));
                             interpolated_color.Clamp();
+
+                            // The color needs to be shaded based on lighting.
+                            for (const Light& light : lights)
+                            {
+                                // COMPUTE SHADING BASED ON TYPE OF LIGHT.
+                                if (LightType::AMBIENT == light.Type)
+                                {
+                                    /// @todo   Should this be multiplicative or additive?
+                                    interpolated_color = Color::ComponentMultiplyRedGreenBlue(interpolated_color, light.AmbientColor);
+                                }
+                            }
 
                             // The coordinates need to be rounded to integer in order
                             // to plot a pixel on a fixed grid.

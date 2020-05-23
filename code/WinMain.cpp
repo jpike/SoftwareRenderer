@@ -21,6 +21,7 @@
 #include "Graphics/Camera.h"
 #include "Graphics/Cube.h"
 #include "Graphics/Gui/Font.h"
+#include "Graphics/Light.h"
 #include "Graphics/Modeling/WavefrontObjectModel.h"
 #include "Graphics/Object3D.h"
 #include "Graphics/RayTracing/Material.h"
@@ -45,6 +46,68 @@ static std::array<GRAPHICS::Material, static_cast<std::size_t>(GRAPHICS::Shading
 static std::size_t g_current_material_index = 0;
 /// The objects currently being rendered.
 static std::vector<GRAPHICS::Object3D> g_objects;
+/// The available lighting configurations.
+static std::vector< std::vector<GRAPHICS::Light> > g_light_configurations =
+{
+    // Full white ambient light.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::AMBIENT,
+            .AmbientColor = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)
+        },
+    },
+    // Half strength ambient light.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::AMBIENT,
+            .AmbientColor = GRAPHICS::Color(0.5f, 0.5f, 0.5f, 1.0f)
+        },
+    },
+    // Pitch-black ambient lighting.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::AMBIENT,
+            .AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f)
+        },
+    },
+    // Red ambient light.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::AMBIENT,
+            .AmbientColor = GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f)
+        },
+    },
+    // Green ambient light.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::AMBIENT,
+            .AmbientColor = GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f)
+        },
+    },
+    // Blue ambient light.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::AMBIENT,
+            .AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f)
+        },
+    },
+};
+/// Current light index into array above.
+static std::size_t g_current_light_index = 0;
+/// The lights currently being used in the scene.
+static std::vector<GRAPHICS::Light>* g_lights = &g_light_configurations[g_current_light_index];
 
 #define USE_RAY_TRACING 0
 #if USE_RAY_TRACING
@@ -652,6 +715,7 @@ LRESULT CALLBACK MainWindowCallback(
             const float CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS = 1.0f;
             constexpr float CAMERA_ROTATE_DEGREES_PER_KEY_PRESS = 1.0f;
             int virtual_key_code = static_cast<int>(w_param);
+            // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
             switch (virtual_key_code)
             {
                 case 0x4D: // M
@@ -668,6 +732,13 @@ LRESULT CALLBACK MainWindowCallback(
                         }
                     }
                     break;
+                }
+                case 0x4C: // L
+                {
+                    // SWITCH TO THE NEXT LIGHTING CONFIGURATION.
+                    ++g_current_light_index;
+                    g_current_light_index = g_current_light_index % g_light_configurations.size();
+                    g_lights = &g_light_configurations[g_current_light_index];
                 }
                 case VK_UP:
                     g_renderer->Camera.WorldPosition.Y += CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;
@@ -985,7 +1056,7 @@ int CALLBACK WinMain(
         // RENDER ALL OBJECTS.
         for (auto object_3D : g_objects)
         {
-            g_renderer->Render(object_3D, render_target);
+            g_renderer->Render(object_3D, *g_lights, render_target);
         }
 
 #define RENDER_GUI_TEXT 1
