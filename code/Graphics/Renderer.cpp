@@ -99,8 +99,31 @@ namespace GRAPHICS
             // TRANSFORM THE TRIANGLE INTO SCREEN-SPACE.
             bool triangle_within_camera_z_boundaries = false;
             Triangle screen_space_triangle = local_triangle;
-            for (auto& vertex : screen_space_triangle.Vertices)
+
+            /// @todo   Look at reducing duplication from world space triangle.
+            Triangle world_space_triangle = local_triangle;
+            for (auto& vertex : world_space_triangle.Vertices)
             {
+                // Y must be flipped since the world Y coordinates are positive going up,
+                // the opposite is true for the screen coordinates.
+                vertex.Y = -vertex.Y;
+                MATH::Vector4f homogeneous_vertex = MATH::Vector4f::HomogeneousPositionVector(vertex);
+
+                MATH::Vector4f world_vertex = object_world_transform * homogeneous_vertex;
+                vertex = MATH::Vector3f(world_vertex.X, world_vertex.Y, world_vertex.Z);
+            }
+
+            // Colors based on lighting also need to be computed.
+            std::array<GRAPHICS::Color, Triangle::VERTEX_COUNT> triangle_vertex_colors =
+            { 
+                GRAPHICS::Color::BLACK, 
+                GRAPHICS::Color::BLACK,
+                GRAPHICS::Color::BLACK,
+            };
+            for (std::size_t vertex_index = 0; vertex_index < screen_space_triangle.Vertices.size(); ++vertex_index)
+            {
+                MATH::Vector3f& vertex = screen_space_triangle.Vertices[vertex_index];
+
                 // Y must be flipped since the world Y coordinates are positive going up,
                 // the opposite is true for the screen coordinates.
                 vertex.Y = -vertex.Y;
@@ -129,21 +152,88 @@ namespace GRAPHICS
                     // we must prevent incorrect (flipped) rendering.
                     (std::abs(transformed_vertex.Z) >= std::abs(transformed_vertex.W));
                 triangle_within_camera_z_boundaries = (triangle_within_camera_z_boundaries || vertex_within_camera_z_boundaries);
+
+                // COMPUTE LIGHTING FOR THE VERTEX.
+                // The initial color is based on the shading type.
+                Color vertex_color = triangle_vertex_colors[vertex_index];
+                switch (world_space_triangle.Material->Shading)
+                {
+                    case ShadingType::WIREFRAME:
+                        vertex_color = screen_space_triangle.Material->WireframeColor;
+                        break;
+                    case ShadingType::WIREFRAME_VERTEX_COLOR_INTERPOLATION:
+                        vertex_color = screen_space_triangle.Material->VertexWireframeColors[vertex_index];
+                        break;
+                    case ShadingType::FLAT:
+                        vertex_color = screen_space_triangle.Material->FaceColor;
+                        break;
+                    case ShadingType::FACE_VERTEX_COLOR_INTERPOLATION:
+                        vertex_color = screen_space_triangle.Material->VertexFaceColors[vertex_index];
+                        break;
+                }
+                Color light_total_color = Color::BLACK;
+                for (const Light& light : lights)
+                {
+                    // COMPUTE SHADING BASED ON TYPE OF LIGHT.
+                    if (LightType::AMBIENT == light.Type)
+                    {
+                        light_total_color += light.Color;
+                    }
+                    else
+                    {
+                        // COMPUTE THE SURFACE NORMAL.
+                        /// @todo   Vertex normals?
+                        MATH::Vector3f unit_surface_normal = world_space_triangle.SurfaceNormal();
+                        
+                        // GET THE DIRECTION OF THE LIGHT.
+                        MATH::Vector3f direction_from_vertex_to_light;
+                        if (LightType::DIRECTIONAL == light.Type)
+                        {
+                            // The computations are based on the opposite direction.
+                            direction_from_vertex_to_light = MATH::Vector3f::Scale(-1.0f, light.DirectionalLightDirection);
+                        }
+                        else if (LightType::POINT == light.Type)
+                        {
+                            direction_from_vertex_to_light = light.PointLightWorldPosition - MATH::Vector3f(world_vertex.X, world_vertex.Y, world_vertex.Z);
+                        }
+
+                        // ADD COLOR FROM THE CURRENT LIGHT.
+                        // This is based on the Lambertian shading model.
+                        // An object is maximally illuminated when facing toward the light.
+                        // An object tangent to the light direction or facing away receives no illumination.
+                        // In-between, the amount of illumination is proportional to the cosine of the angle between
+                        // the light and surface normal (where the cosine can be computed via the dot product).
+                        MATH::Vector3f unit_direction_from_point_to_light = MATH::Vector3f::Normalize(direction_from_vertex_to_light);
+                        constexpr float NO_ILLUMINATION = 0.0f;
+                        float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
+                        illumination_proportion = std::max(NO_ILLUMINATION, illumination_proportion);
+
+                        // ADD THE CURRENT LIGHT'S COLOR.
+                        Color current_light_color = Color::ScaleRedGreenBlue(illumination_proportion, light.Color);
+                        light_total_color += current_light_color;
+                    }
+
+                    /// @todo   The above is basically diffuse.  Need to handle specular.
+                }
+                vertex_color = Color::ComponentMultiplyRedGreenBlue(vertex_color, light_total_color);
+                vertex_color.Clamp();
+                triangle_vertex_colors[vertex_index] = vertex_color;
             }
 
             // RENDER THE SCREEN-SPACE TRIANGLE.
             if (triangle_within_camera_z_boundaries)
             {
-                Render(screen_space_triangle, lights, render_target);
+                /// @todo   Collapse triangle + vertex colors into single data type?
+                Render(screen_space_triangle, triangle_vertex_colors, render_target);
             }
         }
     }
 
     /// Renders a single triangle to the render target.
     /// @param[in]  triangle - The triangle to render (in screen-space coordinates).
-    /// @param[in]  lights - Any lights illuminating the triangle.
+    /// @param[in]  triangle_vertex_colors - The vertex colors of the triangle.
     /// @param[in,out]  render_target - The target to render to.
-    void Renderer::Render(const Triangle& triangle, const std::vector<Light>& lights, RenderTarget& render_target) const
+    void Renderer::Render(const Triangle& triangle, const std::array<GRAPHICS::Color, Triangle::VERTEX_COUNT>& triangle_vertex_colors, RenderTarget& render_target) const
     {
         // GET THE VERTICES.
         // They're needed for all kinds of shading.
@@ -156,17 +246,9 @@ namespace GRAPHICS
         {
             case ShadingType::WIREFRAME:
             {
-                // COMPUTE THE COLOR BASED ON LIGHTING.
-                Color wireframe_color = triangle.Material->WireframeColor;
-                for (const Light& light : lights)
-                {
-                    // COMPUTE SHADING BASED ON TYPE OF LIGHT.
-                    if (LightType::AMBIENT == light.Type)
-                    {
-                        /// @todo   Should this be multiplicative or additive?
-                        wireframe_color = Color::ComponentMultiplyRedGreenBlue(wireframe_color, light.AmbientColor);
-                    }
-                }
+                // GET THE COLOR.
+                /// @todo   Assuming all vertices have the same color here.
+                Color wireframe_color = triangle_vertex_colors[0];
 
                 // DRAW THE FIRST EDGE.
                 DrawLine(
@@ -198,21 +280,10 @@ namespace GRAPHICS
             }
             case ShadingType::WIREFRAME_VERTEX_COLOR_INTERPOLATION:
             {
-                // COMPUTE THE COLORS BASED ON LIGHTING.
-                Color vertex_0_wireframe_color = triangle.Material->VertexWireframeColors[0];
-                Color vertex_1_wireframe_color = triangle.Material->VertexWireframeColors[1];
-                Color vertex_2_wireframe_color = triangle.Material->VertexWireframeColors[2];
-                for (const Light& light : lights)
-                {
-                    // COMPUTE SHADING BASED ON TYPE OF LIGHT.
-                    if (LightType::AMBIENT == light.Type)
-                    {
-                        /// @todo   Should this be multiplicative or additive?
-                        vertex_0_wireframe_color = Color::ComponentMultiplyRedGreenBlue(vertex_0_wireframe_color, light.AmbientColor);
-                        vertex_1_wireframe_color = Color::ComponentMultiplyRedGreenBlue(vertex_1_wireframe_color, light.AmbientColor);
-                        vertex_2_wireframe_color = Color::ComponentMultiplyRedGreenBlue(vertex_2_wireframe_color, light.AmbientColor);
-                    }
-                }
+                // GET THE VERTEX COLORS.
+                Color vertex_0_wireframe_color = triangle_vertex_colors[0];
+                Color vertex_1_wireframe_color = triangle_vertex_colors[1];
+                Color vertex_2_wireframe_color = triangle_vertex_colors[2];
 
                 // DRAW THE FIRST EDGE.
                 DrawLineWithInterpolatedColor(
@@ -316,17 +387,9 @@ namespace GRAPHICS
                             pixel_between_right_edge_and_left_vertex);
                         if (pixel_in_triangle)
                         {
-                            // COMPUTE THE COLOR BASED ON LIGHTING.
-                            Color face_color = triangle.Material->FaceColor;
-                            for (const Light& light : lights)
-                            {
-                                // COMPUTE SHADING BASED ON TYPE OF LIGHT.
-                                if (LightType::AMBIENT == light.Type)
-                                {
-                                    /// @todo   Should this be multiplicative or additive?
-                                    face_color = Color::ComponentMultiplyRedGreenBlue(face_color, light.AmbientColor);
-                                }
-                            }
+                            // GET THE COLOR.
+                            /// @todo   Assuming all vertices have the same color here.
+                            Color face_color = triangle_vertex_colors[0];
 
                             // DRAW THE COLORED PIXEL.
                             // The coordinates need to be rounded to integer in order
@@ -414,9 +477,9 @@ namespace GRAPHICS
                             // The color needs to be interpolated with this kind of shading.
                             Color interpolated_color = GRAPHICS::Color::BLACK;
 
-                            const Color& first_vertex_color = triangle.Material->VertexFaceColors[0];
-                            const Color& second_vertex_color = triangle.Material->VertexFaceColors[1];
-                            const Color& third_vertex_color = triangle.Material->VertexFaceColors[2];
+                            const Color& first_vertex_color = triangle_vertex_colors[0];
+                            const Color& second_vertex_color = triangle_vertex_colors[1];
+                            const Color& third_vertex_color = triangle_vertex_colors[2];
                             interpolated_color.Red = (
                                 (scaled_signed_distance_of_current_pixel_relative_to_right_edge * third_vertex_color.Red) +
                                 (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_vertex_color.Red) +
@@ -430,17 +493,6 @@ namespace GRAPHICS
                                 (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_vertex_color.Blue) +
                                 (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_vertex_color.Blue));
                             interpolated_color.Clamp();
-
-                            // The color needs to be shaded based on lighting.
-                            for (const Light& light : lights)
-                            {
-                                // COMPUTE SHADING BASED ON TYPE OF LIGHT.
-                                if (LightType::AMBIENT == light.Type)
-                                {
-                                    /// @todo   Should this be multiplicative or additive?
-                                    interpolated_color = Color::ComponentMultiplyRedGreenBlue(interpolated_color, light.AmbientColor);
-                                }
-                            }
 
                             // The coordinates need to be rounded to integer in order
                             // to plot a pixel on a fixed grid.

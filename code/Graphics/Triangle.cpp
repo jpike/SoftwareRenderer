@@ -38,4 +38,19 @@ namespace GRAPHICS
         };
         return triangle;
     }
+
+    /// Computes the surface normal of the triangle.
+    /// @return The unit surface normal.
+    MATH::Vector3f Triangle::SurfaceNormal() const
+    {
+        // The edges are calculated relative to the first vertex.
+        // Since they're in a counter-clockwise order, the vertex for
+        // the "first" edge should be the first component of the cross
+        // product to get an outward-facing normal.
+        MATH::Vector3f first_edge = Vertices[1] - Vertices[0];
+        MATH::Vector3f second_edge = Vertices[2] - Vertices[0];
+        MATH::Vector3f surface_normal = MATH::Vector3f::CrossProduct(first_edge, second_edge);
+        MATH::Vector3f normalized_surface_normal = MATH::Vector3f::Normalize(surface_normal);
+        return normalized_surface_normal;
+    }
 }

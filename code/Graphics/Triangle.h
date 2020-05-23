@@ -18,6 +18,9 @@ namespace GRAPHICS
         // CONSTRUCTION.
         static Triangle CreateEquilateral(const GRAPHICS::Material* const material);
 
+        // OTHER METHODS.
+        MATH::Vector3f SurfaceNormal() const;
+
         // PUBLIC MEMBER VARIABLES FOR EASY ACCESS.
         /// The material of the triangle.  Stored externally for re-use
         /// and cheap copying across many triangles.

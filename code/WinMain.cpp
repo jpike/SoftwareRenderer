@@ -55,7 +55,7 @@ static std::vector< std::vector<GRAPHICS::Light> > g_light_configurations =
         GRAPHICS::Light
         {
             .Type = GRAPHICS::LightType::AMBIENT,
-            .AmbientColor = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)
+            .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
         },
     },
     // Half strength ambient light.
@@ -64,7 +64,7 @@ static std::vector< std::vector<GRAPHICS::Light> > g_light_configurations =
         GRAPHICS::Light
         {
             .Type = GRAPHICS::LightType::AMBIENT,
-            .AmbientColor = GRAPHICS::Color(0.5f, 0.5f, 0.5f, 1.0f)
+            .Color = GRAPHICS::Color(0.5f, 0.5f, 0.5f, 1.0f)
         },
     },
     // Pitch-black ambient lighting.
@@ -73,7 +73,7 @@ static std::vector< std::vector<GRAPHICS::Light> > g_light_configurations =
         GRAPHICS::Light
         {
             .Type = GRAPHICS::LightType::AMBIENT,
-            .AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f)
+            .Color = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f)
         },
     },
     // Red ambient light.
@@ -82,7 +82,7 @@ static std::vector< std::vector<GRAPHICS::Light> > g_light_configurations =
         GRAPHICS::Light
         {
             .Type = GRAPHICS::LightType::AMBIENT,
-            .AmbientColor = GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f)
+            .Color = GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f)
         },
     },
     // Green ambient light.
@@ -91,7 +91,7 @@ static std::vector< std::vector<GRAPHICS::Light> > g_light_configurations =
         GRAPHICS::Light
         {
             .Type = GRAPHICS::LightType::AMBIENT,
-            .AmbientColor = GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f)
+            .Color = GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f)
         },
     },
     // Blue ambient light.
@@ -100,7 +100,127 @@ static std::vector< std::vector<GRAPHICS::Light> > g_light_configurations =
         GRAPHICS::Light
         {
             .Type = GRAPHICS::LightType::AMBIENT,
-            .AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f)
+            .Color = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f)
+        },
+    },
+    // White directional light going left.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::DIRECTIONAL,
+            .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            .DirectionalLightDirection = MATH::Vector3f(-1.0f, 0.0f, 0.0f)
+        },
+    },
+    // White directional light going right.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::DIRECTIONAL,
+            .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            .DirectionalLightDirection = MATH::Vector3f(1.0f, 0.0f, 0.0f)
+        },
+    },
+    // White directional light going down.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::DIRECTIONAL,
+            .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            .DirectionalLightDirection = MATH::Vector3f(0.0f, -1.0f, 0.0f)
+        },
+    },
+    // White directional light going up.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::DIRECTIONAL,
+            .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            .DirectionalLightDirection = MATH::Vector3f(0.0f, 1.0f, 0.0f)
+        },
+    },
+    // Red directional light at an angle.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::DIRECTIONAL,
+            .Color = GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f),
+            .DirectionalLightDirection = MATH::Vector3f::Normalize(MATH::Vector3f(1.0f, 1.0f, 0.0f))
+        },
+    },
+    // Green directional light at an angle.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::DIRECTIONAL,
+            .Color = GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f),
+            .DirectionalLightDirection = MATH::Vector3f::Normalize(MATH::Vector3f(0.0f, 1.0f, 1.0f))
+        },
+    },
+    // Blue directional light at an angle.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::DIRECTIONAL,
+            .Color = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f),
+            .DirectionalLightDirection = MATH::Vector3f::Normalize(MATH::Vector3f(1.0f, 0.0f, 1.0f))
+        },
+    },
+    // White point light at center.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::POINT,
+            .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            .PointLightWorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f)
+        },
+    },
+    // Red-green light at left.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::POINT,
+            .Color = GRAPHICS::Color(1.0f, 1.0f, 0.0f, 1.0f),
+            .PointLightWorldPosition = MATH::Vector3f(-50.0f, 0.0f, 0.0f)
+        },
+    },
+    // Green-blue light at right.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::POINT,
+            .Color = GRAPHICS::Color(0.0f, 1.0f, 1.0f, 1.0f),
+            .PointLightWorldPosition = MATH::Vector3f(50.0f, 0.0f, 0.0f)
+        },
+    },
+    // Blue-red light at top.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::POINT,
+            .Color = GRAPHICS::Color(1.0f, 0.0f, 1.0f, 1.0f),
+            .PointLightWorldPosition = MATH::Vector3f(0.0f, 50.0f, 0.0f)
+        },
+    },
+    // Green-blue light at bottom.
+    std::vector<GRAPHICS::Light>
+    {
+        GRAPHICS::Light
+        {
+            .Type = GRAPHICS::LightType::POINT,
+            .Color = GRAPHICS::Color(0.0f, 1.0f, 1.0f, 1.0f),
+            .PointLightWorldPosition = MATH::Vector3f(0.0f, -50.0f, 0.0f)
         },
     },
 };
@@ -739,6 +859,9 @@ LRESULT CALLBACK MainWindowCallback(
                     ++g_current_light_index;
                     g_current_light_index = g_current_light_index % g_light_configurations.size();
                     g_lights = &g_light_configurations[g_current_light_index];
+
+                    std::string light_index_string = "Light index: " + std::to_string(g_current_light_index);
+                    OutputDebugString(light_index_string.c_str());
                 }
                 case VK_UP:
                     g_renderer->Camera.WorldPosition.Y += CAMERA_MOVEMENT_DISTANCE_PER_KEY_PRESS;

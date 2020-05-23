@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <vector>
 #include "Graphics/Camera.h"
 #include "Graphics/Color.h"
@@ -25,7 +26,7 @@ namespace GRAPHICS
 
     private:
         // RENDERING.
-        void Render(const Triangle& triangle, const std::vector<Light>& lights, RenderTarget& render_target) const;
+        void Render(const Triangle& triangle, const std::array<GRAPHICS::Color, Triangle::VERTEX_COUNT>& triangle_vertex_colors, RenderTarget& render_target) const;
 
         void DrawLine(
             const float start_x,
