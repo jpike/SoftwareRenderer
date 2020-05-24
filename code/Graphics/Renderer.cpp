@@ -170,6 +170,9 @@ namespace GRAPHICS
                     case ShadingType::FACE_VERTEX_COLOR_INTERPOLATION:
                         vertex_color = screen_space_triangle.Material->VertexFaceColors[vertex_index];
                         break;
+                    case ShadingType::GOURAUD:
+                        vertex_color = screen_space_triangle.Material->VertexColors[vertex_index];
+                        break;
                 }
                 Color light_total_color = Color::BLACK;
                 for (const Light& light : lights)
@@ -186,6 +189,7 @@ namespace GRAPHICS
                         MATH::Vector3f unit_surface_normal = world_space_triangle.SurfaceNormal();
                         
                         // GET THE DIRECTION OF THE LIGHT.
+                        MATH::Vector3f current_world_vertex = MATH::Vector3f(world_vertex.X, world_vertex.Y, world_vertex.Z);
                         MATH::Vector3f direction_from_vertex_to_light;
                         if (LightType::DIRECTIONAL == light.Type)
                         {
@@ -194,10 +198,10 @@ namespace GRAPHICS
                         }
                         else if (LightType::POINT == light.Type)
                         {
-                            direction_from_vertex_to_light = light.PointLightWorldPosition - MATH::Vector3f(world_vertex.X, world_vertex.Y, world_vertex.Z);
+                            direction_from_vertex_to_light = light.PointLightWorldPosition - current_world_vertex;
                         }
 
-                        // ADD COLOR FROM THE CURRENT LIGHT.
+                        // ADD DIFFUSE COLOR FROM THE CURRENT LIGHT.
                         // This is based on the Lambertian shading model.
                         // An object is maximally illuminated when facing toward the light.
                         // An object tangent to the light direction or facing away receives no illumination.
@@ -207,17 +211,52 @@ namespace GRAPHICS
                         constexpr float NO_ILLUMINATION = 0.0f;
                         float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
                         illumination_proportion = std::max(NO_ILLUMINATION, illumination_proportion);
-
-                        // ADD THE CURRENT LIGHT'S COLOR.
                         Color current_light_color = Color::ScaleRedGreenBlue(illumination_proportion, light.Color);
                         light_total_color += current_light_color;
-                    }
 
-                    /// @todo   The above is basically diffuse.  Need to handle specular.
+                        // ADD SPECULAR COLOR FROM THE CURRENT LIGHT.
+                        /// @todo   Is this how we want to handle specularity?
+                        if (world_space_triangle.Material->SpecularPower > 1.0f)
+                        {
+                            MATH::Vector3f reflected_light_along_surface_normal = MATH::Vector3f::Scale(2.0f * illumination_proportion, unit_surface_normal);
+                            MATH::Vector3f reflected_light_direction = reflected_light_along_surface_normal - unit_direction_from_point_to_light;
+                            MATH::Vector3f unit_reflected_light_direction = MATH::Vector3f::Normalize(reflected_light_direction);
+
+                            MATH::Vector3f ray_from_vertex_to_camera = Camera.WorldPosition - current_world_vertex;
+                            MATH::Vector3f normalized_ray_from_vertex_to_camera = MATH::Vector3f::Normalize(ray_from_vertex_to_camera);
+                            float specular_proportion = MATH::Vector3f::DotProduct(normalized_ray_from_vertex_to_camera, unit_reflected_light_direction);
+                            specular_proportion = std::max(NO_ILLUMINATION, specular_proportion);
+                            specular_proportion = std::pow(specular_proportion, world_space_triangle.Material->SpecularPower);
+
+                            Color current_light_specular_color = Color::ScaleRedGreenBlue(specular_proportion, light.Color);
+                            light_total_color += current_light_specular_color;
+                        }
+                    }
                 }
                 vertex_color = Color::ComponentMultiplyRedGreenBlue(vertex_color, light_total_color);
                 vertex_color.Clamp();
                 triangle_vertex_colors[vertex_index] = vertex_color;
+            }
+
+            /// @todo   This is a bit of hack for flat shading...
+            if (ShadingType::FLAT == world_space_triangle.Material->Shading)
+            {
+                float total_red = 0.0f;
+                float total_green = 0.0f;
+                float total_blue = 0.0f;
+                for (const Color& vertex_color : triangle_vertex_colors)
+                {
+                    total_red += vertex_color.Red;
+                    total_green += vertex_color.Green;
+                    total_blue += vertex_color.Blue;
+                }
+                float average_red = total_red / 3.0f;
+                float average_green = total_green / 3.0f;
+                float average_blue = total_blue / 3.0f;
+                Color average_vertex_color(average_red, average_green, average_blue, 1.0f);
+                triangle_vertex_colors[0] = average_vertex_color;
+                triangle_vertex_colors[1] = average_vertex_color;
+                triangle_vertex_colors[2] = average_vertex_color;
             }
 
             // RENDER THE SCREEN-SPACE TRIANGLE.
@@ -404,6 +443,7 @@ namespace GRAPHICS
                 break;
             }
             case ShadingType::FACE_VERTEX_COLOR_INTERPOLATION:
+            case ShadingType::GOURAUD: /// @todo    This should be the same?
             {
                 // COMPUTE THE BARYCENTRIC COORDINATES OF THE TRIANGLE VERTICES.
                 float top_vertex_signed_distance_from_bottom_edge = (

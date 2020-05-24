@@ -1059,7 +1059,19 @@ int CALLBACK WinMain(
                 GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f),
                 GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f),
             }
-        }
+        },
+        GRAPHICS::Material
+        {
+            .Shading = GRAPHICS::ShadingType::GOURAUD,
+            .VertexColors =
+            {
+                // Basic grayscale.
+                GRAPHICS::Color(0.5f, 0.5f, 0.5f, 1.0f),
+                GRAPHICS::Color(0.5f, 0.5f, 0.5f, 1.0f),
+                GRAPHICS::Color(0.5f, 0.5f, 0.5f, 1.0f),
+            },
+            .SpecularPower = 20.0f
+        },
     };
 
     // CREATE MANY SMALL TRIANGLES FOR RENDERING.
