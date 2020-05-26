@@ -17,6 +17,7 @@
 #include "Graphics/RayTracing/Triangle.cpp"
 #include "Graphics/Renderer.cpp"
 #include "Graphics/RenderTarget.cpp"
+#include "Graphics/Texture.cpp"
 #include "Graphics/Triangle.cpp"
 #include "Math/CoordinateFrame.cpp"
 #include "Windowing/Win32Window.cpp"

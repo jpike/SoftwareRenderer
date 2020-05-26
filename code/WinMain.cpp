@@ -31,6 +31,7 @@
 #include "Graphics/RayTracing/Triangle.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/RenderTarget.h"
+#include "Graphics/Texture.h"
 #include "Graphics/Triangle.h"
 #include "Windowing/Win32Window.h"
 
@@ -1025,6 +1026,14 @@ int CALLBACK WinMain(
     g_renderer = std::make_unique<GRAPHICS::Renderer>();
     g_renderer->Camera = GRAPHICS::Camera::LookAtFrom(MATH::Vector3f(0.0f, 0.0f, 0.0f), MATH::Vector3f(0.0f, 0.0f, 100.0f));
 
+    // LOAD A TEXTURE FOR TESTING.
+    std::shared_ptr<GRAPHICS::Texture> texture = GRAPHICS::Texture::Load("../assets/test_texture1.bmp");
+    if (!texture)
+    {
+        OutputDebugString("Failed to load test texture.");
+        return EXIT_FAILURE;
+    }
+
     // DEFINE A VARIETY OF MATERIALS.
     // These can't be initialized statically since some of the color constants are also static,
     // and initialization order isn't clearly defined.
@@ -1203,6 +1212,15 @@ int CALLBACK WinMain(
             .LeftTopPosition = MATH::Vector2f(0.0f, 0.0f)
         };
         g_renderer->Render(text, render_target);
+
+        // Debug rendering of test texture.
+        for (unsigned int y = 0; y < texture->Bitmap.GetHeightInPixels(); ++y)
+        {
+            for (unsigned int x = 0; x < texture->Bitmap.GetWidthInPixels(); ++x)
+            {
+                render_target.WritePixel(x, y, texture->Bitmap.GetPixel(x, y));
+            }
+        }
 #endif
 
 #define RENDER_ALL_FONT_CHARACTERS 0
