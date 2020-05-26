@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include "Graphics/Color.h"
+#include "Graphics/Texture.h"
 
 namespace GRAPHICS
 {
@@ -19,6 +21,9 @@ namespace GRAPHICS
         FACE_VERTEX_COLOR_INTERPOLATION,
         /// Typical Gouraud shading, with diffuse and specular components computer per vertex.
         GOURAUD,
+        /// Shading that incorporates a texture.
+        /// @todo   Should this be incorporated into something else?
+        TEXTURED,
         /// An extra enum to indicate the number of different shading types.
         COUNT
     };
@@ -31,28 +36,34 @@ namespace GRAPHICS
         ShadingType Shading = ShadingType::WIREFRAME;
 
         /// The color of an edge, if wireframe shading is used.
-        GRAPHICS::Color WireframeColor = GRAPHICS::Color::BLACK;
+        Color WireframeColor = Color::BLACK;
 
         /// The colors of each of the vertices for use in wireframe shading.
         /// Expected to be in counter-clockwise vertex order, and the number of vertex colors
         /// can vary to handle different kinds of polygonal shapes.
-        std::vector<GRAPHICS::Color> VertexWireframeColors = {};
+        std::vector<Color> VertexWireframeColors = {};
 
         /// The color of a face, if solid-color face (flat) shading is used.
-        GRAPHICS::Color FaceColor = GRAPHICS::Color::BLACK;
+        Color FaceColor = Color::BLACK;
 
         /// The colors of each of the vertices for use in interpolated face shading.
         /// Expected to be in counter-clockwise vertex order, and the number of vertex colors
         /// can vary to handle different kinds of polygonal shapes.
-        std::vector<GRAPHICS::Color> VertexFaceColors = {};
+        std::vector<Color> VertexFaceColors = {};
 
         /// The vertex colors for Gouraud shading.
         /// Expected to be in counter-clockwise vertex order, and the number of vertex colors
         /// can vary to handle different kinds of polygonal shapes.
         /// @todo   Consolidate these vertex colors with other vertex colors?
-        std::vector<GRAPHICS::Color> VertexColors = {};
+        std::vector<Color> VertexColors = {};
 
         /// The specular power defining the shininess of specular highlights.
         float SpecularPower = 0.0f;
+
+        /// Any texture defining the look of the material.
+        std::shared_ptr<Texture> Texture = nullptr;
+
+        /// Any texture coordinates [0,1] for the vertices.
+        std::vector<MATH::Vector2f> VertexTextureCoordinates = {};
     };
 }

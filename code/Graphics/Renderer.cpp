@@ -173,6 +173,9 @@ namespace GRAPHICS
                     case ShadingType::GOURAUD:
                         vertex_color = screen_space_triangle.Material->VertexColors[vertex_index];
                         break;
+                    case ShadingType::TEXTURED:
+                        vertex_color = screen_space_triangle.Material->VertexColors[vertex_index];
+                        break;
                 }
                 Color light_total_color = Color::BLACK;
                 for (const Light& light : lights)
@@ -444,6 +447,7 @@ namespace GRAPHICS
             }
             case ShadingType::FACE_VERTEX_COLOR_INTERPOLATION:
             case ShadingType::GOURAUD: /// @todo    This should be the same?
+            case ShadingType::TEXTURED: /// @todo    This should be the same?
             {
                 // COMPUTE THE BARYCENTRIC COORDINATES OF THE TRIANGLE VERTICES.
                 float top_vertex_signed_distance_from_bottom_edge = (
@@ -533,6 +537,53 @@ namespace GRAPHICS
                                 (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_vertex_color.Blue) +
                                 (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_vertex_color.Blue));
                             interpolated_color.Clamp();
+
+                            if (ShadingType::TEXTURED == triangle.Material->Shading)
+                            {
+                                // INTERPOLATE THE TEXTURE COORDINATES.
+                                const MATH::Vector2f& first_texture_coordinate = triangle.Material->VertexTextureCoordinates[0];
+                                const MATH::Vector2f& second_texture_coordinate = triangle.Material->VertexTextureCoordinates[1];
+                                const MATH::Vector2f& third_texture_coordinate = triangle.Material->VertexTextureCoordinates[2];
+
+                                MATH::Vector2f interpolated_texture_coordinate;
+                                interpolated_texture_coordinate.X = (
+                                    (scaled_signed_distance_of_current_pixel_relative_to_right_edge * third_texture_coordinate.X) +
+                                    (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_texture_coordinate.X) +
+                                    (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_texture_coordinate.X));
+                                interpolated_texture_coordinate.Y = (
+                                    (scaled_signed_distance_of_current_pixel_relative_to_right_edge * third_texture_coordinate.Y) +
+                                    (scaled_signed_distance_of_current_pixel_relative_to_left_edge * second_texture_coordinate.Y) +
+                                    (scaled_signed_distance_of_current_pixel_relative_to_bottom_edge * first_texture_coordinate.Y));
+                                // Clamping.
+                                if (interpolated_texture_coordinate.X < 0.0f)
+                                {
+                                    interpolated_texture_coordinate.X = 0.0f;
+                                }
+                                else if (interpolated_texture_coordinate.X > 1.0f)
+                                {
+                                    interpolated_texture_coordinate.X = 1.0f;
+                                }
+                                if (interpolated_texture_coordinate.Y < 0.0f)
+                                {
+                                    interpolated_texture_coordinate.Y = 0.0f;
+                                }
+                                else if (interpolated_texture_coordinate.Y > 1.0f)
+                                {
+                                    interpolated_texture_coordinate.Y = 1.0f;
+                                }
+
+                                // LOOK UP THE TEXTURE COLOR AT THE COORDINATES.
+                                unsigned int texture_width_in_pixels = triangle.Material->Texture->Bitmap.GetWidthInPixels();                                
+                                unsigned int texture_pixel_x_coordinate = static_cast<unsigned int>(texture_width_in_pixels * interpolated_texture_coordinate.X);
+
+                                unsigned int texture_height_in_pixels = triangle.Material->Texture->Bitmap.GetHeightInPixels();
+                                unsigned int texture_pixel_y_coordinate = static_cast<unsigned int>(texture_height_in_pixels * interpolated_texture_coordinate.Y);
+
+                                Color texture_color = triangle.Material->Texture->Bitmap.GetPixel(texture_pixel_x_coordinate, texture_pixel_y_coordinate);
+
+                                interpolated_color = Color::ComponentMultiplyRedGreenBlue(interpolated_color, texture_color);
+                                interpolated_color.Clamp();
+                            }
 
                             // The coordinates need to be rounded to integer in order
                             // to plot a pixel on a fixed grid.

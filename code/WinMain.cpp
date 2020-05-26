@@ -1081,6 +1081,23 @@ int CALLBACK WinMain(
             },
             .SpecularPower = 20.0f
         },
+        GRAPHICS::Material
+        {
+            .Shading = GRAPHICS::ShadingType::TEXTURED,
+            .VertexColors =
+            {
+                GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+                GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+                GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            },
+            .Texture = texture,
+            .VertexTextureCoordinates =
+            {
+                MATH::Vector2f(0.0f, 0.0f),
+                MATH::Vector2f(1.0f, 0.0f),
+                MATH::Vector2f(0.0f, 1.0f)
+            }
+        }
     };
 
     // CREATE MANY SMALL TRIANGLES FOR RENDERING.
