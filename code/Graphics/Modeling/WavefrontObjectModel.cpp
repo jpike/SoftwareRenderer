@@ -186,14 +186,14 @@ namespace GRAPHICS::MODELING
         // LOAD ANY MATERIALS.
         // Materials are expected to all be within the same folder as the .obj file.
         std::filesystem::path model_folder_path = obj_filepath.parent_path();
-        std::vector<Material> materials;
+        std::vector<std::shared_ptr<Material>> materials;
         for (const auto& material_filename : material_filenames)
         {
             std::filesystem::path material_filepath = model_folder_path / material_filename;
-            std::optional<Material> material = WavefrontMaterial::Load(material_filepath);
+            std::shared_ptr<Material> material = WavefrontMaterial::Load(material_filepath);
             if (material)
             {
-                materials.push_back(*material);
+                materials.push_back(material);
             }
         }
 
@@ -207,18 +207,9 @@ namespace GRAPHICS::MODELING
             MATH::Vector3f third_vertex = vertices.at(std::get<2>(face));
 
             // ADD THE CURRENT TRIANGLE.
-            Triangle triangle =
-            {
-                .Vertices = 
-                {
-                    first_vertex,
-                    second_vertex,
-                    third_vertex
-                }
-            };
-            object_3d.Triangles.push_back(triangle);
-
             /// @todo   How to handle materials?  Need some kind of permanent storage.
+            Triangle triangle(materials[0], { first_vertex, second_vertex, third_vertex });
+            object_3d.Triangles.push_back(triangle);
         }
 
         return object_3d;

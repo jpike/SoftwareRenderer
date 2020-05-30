@@ -4,14 +4,12 @@
 TEST_CASE("World transform can translate a vector.", "[Object3D][WorldTransform]")
 {
     // CREATE A 3D OBJECT.
-    GRAPHICS::Triangle triangle =
+    GRAPHICS::Triangle triangle;
+    triangle.Vertices =
     {
-        .Vertices =
-        {
-            MATH::Vector3f(0.0f, 1.0f, 0.0f),
-            MATH::Vector3f(-1.0f, -1.0f, 0.0f),
-            MATH::Vector3f(1.0f, -1.0f, 0.0f)
-        }
+        MATH::Vector3f(0.0f, 1.0f, 0.0f),
+        MATH::Vector3f(-1.0f, -1.0f, 0.0f),
+        MATH::Vector3f(1.0f, -1.0f, 0.0f)
     };
 
     GRAPHICS::Object3D test_object_3D;

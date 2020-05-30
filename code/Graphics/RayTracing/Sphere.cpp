@@ -22,9 +22,9 @@ namespace RAY_TRACING
 
     /// Gets the material defining surface properties of the object.
     /// @return The material for the object.
-    Material Sphere::GetMaterial() const
+    const Material* Sphere::GetMaterial() const
     {
-        return Material;
+        return Material.get();
     }
 
     /// Checks for an intersection between a ray and the object.

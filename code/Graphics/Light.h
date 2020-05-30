@@ -21,6 +21,8 @@ namespace GRAPHICS
     class Light
     {
     public:
+        MATH::Vector3f PointLightDirectionFrom(const MATH::Vector3f& other_world_position) const;
+
         /// The type of the light.
         LightType Type = LightType::AMBIENT;
         /// The color of the light.

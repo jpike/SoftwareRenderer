@@ -114,11 +114,11 @@ namespace GRAPHICS
             }
 
             // Colors based on lighting also need to be computed.
-            std::array<GRAPHICS::Color, Triangle::VERTEX_COUNT> triangle_vertex_colors =
+            std::array<Color, Triangle::VERTEX_COUNT> triangle_vertex_colors =
             { 
-                GRAPHICS::Color::BLACK, 
-                GRAPHICS::Color::BLACK,
-                GRAPHICS::Color::BLACK,
+                Color::BLACK, 
+                Color::BLACK,
+                Color::BLACK,
             };
             for (std::size_t vertex_index = 0; vertex_index < screen_space_triangle.Vertices.size(); ++vertex_index)
             {
@@ -176,14 +176,26 @@ namespace GRAPHICS
                     case ShadingType::TEXTURED:
                         vertex_color = screen_space_triangle.Material->VertexColors[vertex_index];
                         break;
+                    case ShadingType::MATERIAL:
+                        /// @todo   Leave as white?  Currently done to have some lighting (as opposed to black).
+                        vertex_color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+                        break;
                 }
+
                 Color light_total_color = Color::BLACK;
                 for (const Light& light : lights)
                 {
                     // COMPUTE SHADING BASED ON TYPE OF LIGHT.
                     if (LightType::AMBIENT == light.Type)
                     {
-                        light_total_color += light.Color;
+                        if (ShadingType::MATERIAL == world_space_triangle.Material->Shading)
+                        {
+                            light_total_color += Color::ComponentMultiplyRedGreenBlue(light.Color, world_space_triangle.Material->AmbientColor);
+                        }
+                        else
+                        {
+                            light_total_color += light.Color;
+                        }
                     }
                     else
                     {
@@ -215,7 +227,14 @@ namespace GRAPHICS
                         float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
                         illumination_proportion = std::max(NO_ILLUMINATION, illumination_proportion);
                         Color current_light_color = Color::ScaleRedGreenBlue(illumination_proportion, light.Color);
-                        light_total_color += current_light_color;
+                        if (ShadingType::MATERIAL == world_space_triangle.Material->Shading)
+                        {
+                            light_total_color += Color::ComponentMultiplyRedGreenBlue(current_light_color, world_space_triangle.Material->DiffuseColor);
+                        }
+                        else
+                        {
+                            light_total_color += current_light_color;
+                        }
 
                         // ADD SPECULAR COLOR FROM THE CURRENT LIGHT.
                         /// @todo   Is this how we want to handle specularity?
@@ -232,7 +251,15 @@ namespace GRAPHICS
                             specular_proportion = std::pow(specular_proportion, world_space_triangle.Material->SpecularPower);
 
                             Color current_light_specular_color = Color::ScaleRedGreenBlue(specular_proportion, light.Color);
-                            light_total_color += current_light_specular_color;
+
+                            if (ShadingType::MATERIAL == world_space_triangle.Material->Shading)
+                            {
+                                light_total_color += Color::ComponentMultiplyRedGreenBlue(current_light_specular_color, world_space_triangle.Material->SpecularColor);
+                            }
+                            else
+                            {
+                                light_total_color += current_light_specular_color;
+                            }
                         }
                     }
                 }
@@ -448,6 +475,7 @@ namespace GRAPHICS
             case ShadingType::FACE_VERTEX_COLOR_INTERPOLATION:
             case ShadingType::GOURAUD: /// @todo    This should be the same?
             case ShadingType::TEXTURED: /// @todo    This should be the same?
+            case ShadingType::MATERIAL: /// @todo    This should be the same?
             {
                 // COMPUTE THE BARYCENTRIC COORDINATES OF THE TRIANGLE VERTICES.
                 float top_vertex_signed_distance_from_bottom_edge = (

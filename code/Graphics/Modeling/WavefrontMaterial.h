@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include <optional>
+#include <memory>
 #include "Graphics/Material.h"
 
 namespace GRAPHICS::MODELING
@@ -11,6 +11,6 @@ namespace GRAPHICS::MODELING
     class WavefrontMaterial
     {
     public:
-        static std::optional<Material> Load(const std::filesystem::path& mtl_filepath);
+        static std::shared_ptr<Material> Load(const std::filesystem::path& mtl_filepath);
     };
 }

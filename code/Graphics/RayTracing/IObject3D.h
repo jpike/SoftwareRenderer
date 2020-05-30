@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include "Graphics/RayTracing/Material.h"
+#include "Graphics/Material.h"
 #include "Graphics/RayTracing/Ray.h"
 #include "Graphics/RayTracing/RayObjectIntersection.h"
 
@@ -22,8 +22,8 @@ namespace RAY_TRACING
         virtual MATH::Vector3f SurfaceNormal(const MATH::Vector3f& surface_point) const = 0;
 
         /// Gets the material defining surface properties of the object.
-        /// @return The material for the object.
-        virtual Material GetMaterial() const = 0;
+        /// @return The material for the object; null if no material exists.
+        virtual const Material* GetMaterial() const = 0;
 
         /// Checks for an intersection between a ray and the object.
         /// Intended to be implemented in derived classes so that each

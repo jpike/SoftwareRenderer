@@ -60,16 +60,16 @@ namespace RAY_TRACING
         Color final_color = Color::BLACK;
 
         // ADD IN THE AMBIENT COLOR IF ENABLED.
-        const Material& intersected_material = intersection.Object->GetMaterial();
+        const Material* intersected_material = intersection.Object->GetMaterial();
         if (Ambient)
         {
-            final_color += intersected_material.AmbientColor;
+            final_color += intersected_material->AmbientColor;
         }
 
         // COMPUTE SHADOWS.
         std::vector<float> shadow_factors_by_light_index;
         MATH::Vector3f intersection_point = intersection.IntersectionPoint();
-        for (const PointLight& light : scene.PointLights)
+        for (const Light& light : scene.PointLights)
         {
             // CAST A RAY OUT TO COMPUTE SHADOWS IF ENABLED.
             // To simplify later parts of the algorithm, a shadow factor of 1 (no shadowing)
@@ -79,7 +79,7 @@ namespace RAY_TRACING
             if (Shadows)
             {
                 // SHOOT A SHADOW RAY OUT FROM THE INTERSECTION POINT TO THE LIGHT.
-                MATH::Vector3f direction_from_point_to_light = light.DirectionFrom(intersection_point);
+                MATH::Vector3f direction_from_point_to_light = light.PointLightDirectionFrom(intersection_point);
                 Ray shadow_ray(intersection_point, direction_from_point_to_light);
                 std::optional<RayObjectIntersection> shadow_intersection = ComputeClosestIntersection(scene, shadow_ray, intersection.Object);
                 if (shadow_intersection)
@@ -124,8 +124,8 @@ namespace RAY_TRACING
                 // An object tangent to the light direction or facing away receives no illumination.
                 // In-between, the amount of illumination is proportional to the cosine of the angle between
                 // the light and surface normal (where the cosine can be computed via the dot product).
-                const PointLight& light = scene.PointLights.at(light_index);
-                MATH::Vector3f direction_from_point_to_light = light.DirectionFrom(intersection_point);
+                const Light& light = scene.PointLights.at(light_index);
+                MATH::Vector3f direction_from_point_to_light = light.PointLightDirectionFrom(intersection_point);
                 MATH::Vector3f unit_direction_from_point_to_light = MATH::Vector3f::Normalize(direction_from_point_to_light);
                 constexpr float NO_ILLUMINATION = 0.0f;
                 float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
@@ -140,7 +140,7 @@ namespace RAY_TRACING
 
             // The diffuse color is multiplied component-wise by the amount of light.
             Color diffuse_color = Color::ComponentMultiplyRedGreenBlue(
-                intersected_material.DiffuseColor,
+                intersected_material->DiffuseColor,
                 light_total_color);
             final_color += diffuse_color;
         }
@@ -156,8 +156,8 @@ namespace RAY_TRACING
             for (std::size_t light_index = 0; light_index < scene.PointLights.size(); ++light_index)
             {
                 // COMPUTE THE AMOUNT OF ILLUMINATION FROM THE CURRENT LIGHT.
-                const PointLight& light = scene.PointLights.at(light_index);
-                MATH::Vector3f direction_from_point_to_light = light.DirectionFrom(intersection_point);
+                const Light& light = scene.PointLights.at(light_index);
+                MATH::Vector3f direction_from_point_to_light = light.PointLightDirectionFrom(intersection_point);
                 MATH::Vector3f unit_direction_from_point_to_light = MATH::Vector3f::Normalize(direction_from_point_to_light);
                 constexpr float NO_ILLUMINATION = 0.0f;
                 float illumination_proportion = MATH::Vector3f::DotProduct(unit_surface_normal, unit_direction_from_point_to_light);
@@ -171,7 +171,7 @@ namespace RAY_TRACING
                 // COMPUTE THE SPECULAR AMOUNT.
                 float specular_proportion = MATH::Vector3f::DotProduct(normalized_ray_from_intersection_to_eye, unit_reflected_light_direction);
                 specular_proportion = std::max(NO_ILLUMINATION, specular_proportion);
-                specular_proportion = std::pow(specular_proportion, intersected_material.SpecularPower);
+                specular_proportion = std::pow(specular_proportion, intersected_material->SpecularPower);
 
                 // ADD THE CURRENT LIGHT'S SPECULAR COLOR.
                 float shadow_factor = shadow_factors_by_light_index.at(light_index);
@@ -182,7 +182,7 @@ namespace RAY_TRACING
 
             // The specular color is multiplied component-wise by the amount of light.
             Color specular_color = Color::ComponentMultiplyRedGreenBlue(
-                intersected_material.SpecularColor,
+                intersected_material->SpecularColor,
                 specular_light_total_color);
             final_color += specular_color;
         }
@@ -193,7 +193,7 @@ namespace RAY_TRACING
             // CHECK IF THE RAY CAN BE REFLECTED.
             // In addition to the remaining reflections, there's no need to compute
             // color from reflected light in the material isn't reflective.
-            bool ray_can_be_reflected = (remaining_reflection_count > 0) && (intersected_material.ReflectivityProportion > 0.0f);
+            bool ray_can_be_reflected = (remaining_reflection_count > 0) && (intersected_material->ReflectivityProportion > 0.0f);
             if (!ray_can_be_reflected)
             {
                 // RETURN THE COLOR AS-IS.
@@ -217,13 +217,13 @@ namespace RAY_TRACING
                 // COMPUTE THE REFLECTED COLOR.
                 const unsigned int child_reflection_count = remaining_reflection_count - 1;
                 Color raw_reflected_color = ComputeColor(scene, *reflected_intersection, child_reflection_count);
-                Color reflected_color = Color::ScaleRedGreenBlue(intersected_material.ReflectivityProportion, raw_reflected_color);
+                Color reflected_color = Color::ScaleRedGreenBlue(intersected_material->ReflectivityProportion, raw_reflected_color);
                 final_color += reflected_color;
             }
             else
             {
                 // ADD REFLECTED LIGHT CONTRIBUTED FROM THE BACKGROUND.
-                Color reflected_color = Color::ScaleRedGreenBlue(intersected_material.ReflectivityProportion, scene.BackgroundColor);
+                Color reflected_color = Color::ScaleRedGreenBlue(intersected_material->ReflectivityProportion, scene.BackgroundColor);
                 final_color += reflected_color;
             }
         }

@@ -22,13 +22,11 @@
 #include "Graphics/Cube.h"
 #include "Graphics/Gui/Font.h"
 #include "Graphics/Light.h"
+#include "Graphics/Material.h"
 #include "Graphics/Modeling/WavefrontObjectModel.h"
 #include "Graphics/Object3D.h"
-#include "Graphics/RayTracing/Material.h"
-#include "Graphics/RayTracing/PointLight.h"
 #include "Graphics/RayTracing/RayTracingAlgorithm.h"
 #include "Graphics/RayTracing/Sphere.h"
-#include "Graphics/RayTracing/Triangle.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/RenderTarget.h"
 #include "Graphics/Texture.h"
@@ -42,7 +40,7 @@ static std::unique_ptr<WINDOWING::Win32Window> g_window = nullptr;
 /// The renderer.
 static std::unique_ptr<GRAPHICS::Renderer> g_renderer = nullptr;
 /// Materials by shading type.
-static std::array<GRAPHICS::Material, static_cast<std::size_t>(GRAPHICS::ShadingType::COUNT)> g_materials_by_shading_type;
+static std::array<std::shared_ptr<GRAPHICS::Material>, static_cast<std::size_t>(GRAPHICS::ShadingType::COUNT)> g_materials_by_shading_type;
 /// Current material index into the array above.
 static std::size_t g_current_material_index = 0;
 /// The objects currently being rendered.
@@ -243,19 +241,21 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
         {
             // BASIC TRIANGLE.
             auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(0.0f, 0.0f, 0.0f),
-                GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f),
+            });
             scene->BackgroundColor = GRAPHICS::Color(0.3f, 0.3f, 0.7f, 0.0f);
 
-            GRAPHICS::RAY_TRACING::Material material;
-            material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-            material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            material.SpecularPower = 1.0f;
-            material.ReflectivityProportion = 0.0f;
+            auto material = std::make_shared<GRAPHICS::Material>();
+            material->DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+            material->AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+            material->SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+            material->SpecularPower = 1.0f;
+            material->ReflectivityProportion = 0.0f;
 
-            auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            auto triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(-1.0f, -1.0f, -2.0f),
@@ -270,19 +270,21 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
         {
             // MULTIPLE TRIANGLES.
             auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(4.0f, 4.0f, 8.0f),
-                GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(4.0f, 4.0f, 8.0f),
+            });
             scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
 
-            GRAPHICS::RAY_TRACING::Material material;
-            material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-            material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
-            material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            material.SpecularPower = 1.0f;
-            material.ReflectivityProportion = 0.0f;
+            auto material = std::make_shared<GRAPHICS::Material>();
+            material->DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+            material->AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+            material->SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+            material->SpecularPower = 1.0f;
+            material->ReflectivityProportion = 0.0f;
 
-            auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            auto triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(-0.1f, -0.1f, -2.0f),
@@ -292,7 +294,7 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             triangle->Material = material;
             scene->Objects.push_back(std::move(triangle));
 
-            triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(-0.9f, -0.9f, -2.0f),
@@ -302,7 +304,7 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             triangle->Material = material;
             scene->Objects.push_back(std::move(triangle));
 
-            triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(0.5f, -0.5f, -2.0f),
@@ -317,20 +319,22 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
         case 2:
         {
             auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(4.0f, 4.0f, 8.0f),
-                GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(4.0f, 4.0f, 8.0f),
+            });
             scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
 
             // TRIANLGE + SPHERE.
-            GRAPHICS::RAY_TRACING::Material material;
-            material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-            material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
-            material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            material.SpecularPower = 1.0f;
-            material.ReflectivityProportion = 0.0f;
+            auto material = std::make_shared<GRAPHICS::Material>();
+            material->DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+            material->AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+            material->SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+            material->SpecularPower = 1.0f;
+            material->ReflectivityProportion = 0.0f;
 
-            auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            auto triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(-1.0f, -1.0f, -3.0f),
@@ -341,12 +345,12 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             scene->Objects.push_back(std::move(triangle));
 
             // SPHERE.
-            GRAPHICS::RAY_TRACING::Material sphere_material;
-            sphere_material.DiffuseColor = GRAPHICS::Color(0.8f, 0.2f, 0.7f, 1.0f);
-            sphere_material.AmbientColor = GRAPHICS::Color(0.3f, 0.1f, 0.6f, 1.0f);
-            sphere_material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            sphere_material.SpecularPower = 1.0f;
-            sphere_material.ReflectivityProportion = 0.0f;
+            auto sphere_material = std::make_shared<GRAPHICS::Material>();
+            sphere_material->DiffuseColor = GRAPHICS::Color(0.8f, 0.2f, 0.7f, 1.0f);
+            sphere_material->AmbientColor = GRAPHICS::Color(0.3f, 0.1f, 0.6f, 1.0f);
+            sphere_material->SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+            sphere_material->SpecularPower = 1.0f;
+            sphere_material->ReflectivityProportion = 0.0f;
 
             auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
             sphere->CenterPosition = MATH::Vector3f(0.0f, 0.0f, -3.0f);
@@ -361,26 +365,32 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
         {
             // MULTIPLE LIGHTS.
             auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(3.0f, 4.0f, 0.0f),
-                GRAPHICS::Color(0.9f, 0.0f, 0.0f, 1.0f)));
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(-4.0f, 5.0f, 0.0f),
-                GRAPHICS::Color(0.0f, 0.9f, 0.0f, 1.0f)));
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(0.0f, 4.0f, -5.0f),
-                GRAPHICS::Color(0.0f, 0.0f, 0.9f, 1.0f)));
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(0.9f, 0.0f, 0.0f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(3.0f, 4.0f, 0.0f),
+            });
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(0.0f, 0.9f, 0.0f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(-4.0f, 5.0f, 0.0f),
+            });
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(0.0f, 0.0f, 0.9f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(0.0f, 4.0f, -5.0f),
+            });
             scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
 
             // Ground plane.
-            GRAPHICS::RAY_TRACING::Material material;
-            material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-            material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
-            material.SpecularColor = GRAPHICS::Color(0.1f, 0.1f, 0.1f, 1.0f);
-            material.SpecularPower = 1.0f;
-            material.ReflectivityProportion = 0.5f;
+            auto material = std::make_shared<GRAPHICS::Material>();
+            material->DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+            material->AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+            material->SpecularColor = GRAPHICS::Color(0.1f, 0.1f, 0.1f, 1.0f);
+            material->SpecularPower = 1.0f;
+            material->ReflectivityProportion = 0.5f;
 
-            auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            auto triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(-100.0f, -1.0f, -100.0f),
@@ -390,7 +400,7 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             triangle->Material = material;
             scene->Objects.push_back(std::move(triangle));
 
-            triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(100.0f, -1.0f, 100.0f),
@@ -401,12 +411,12 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             scene->Objects.push_back(std::move(triangle));
 
             // SPHERE.
-            GRAPHICS::RAY_TRACING::Material sphere_material;
-            sphere_material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-            sphere_material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
-            sphere_material.SpecularColor = GRAPHICS::Color(0.1f, 0.1f, 0.1f, 1.0f);
-            sphere_material.SpecularPower = 1.0f;
-            sphere_material.ReflectivityProportion = 0.5f;
+            auto sphere_material = std::make_shared<GRAPHICS::Material>();
+            sphere_material->DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+            sphere_material->AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+            sphere_material->SpecularColor = GRAPHICS::Color(0.1f, 0.1f, 0.1f, 1.0f);
+            sphere_material->SpecularPower = 1.0f;
+            sphere_material->ReflectivityProportion = 0.5f;
 
             auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
             sphere->CenterPosition = MATH::Vector3f(0.0f, 0.5f, -3.0f);
@@ -421,23 +431,27 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
         {
             // MULTIPLE REFLECTIVE SPHERES.
             auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(8.0f, 8.0f, 3.0f),
-                GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f)));
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(-4.0f, 2.0f, 0.0f),
-                GRAPHICS::Color(0.3f, 0.3f, 0.3f, 1.0f)));
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(8.0f, 8.0f, 3.0f),
+            });
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(0.3f, 0.3f, 0.3f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(-4.0f, 2.0f, 0.0f),
+            });
             scene->BackgroundColor = GRAPHICS::Color(0.2f, 0.2f, 1.0f, 0.0f);
 
             // Ground plane.
-            GRAPHICS::RAY_TRACING::Material material;
-            material.DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
-            material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
-            material.SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
-            material.SpecularPower = 1.0f;
-            material.ReflectivityProportion = 0.5f;
+            auto material = std::make_shared<GRAPHICS::Material>();
+            material->DiffuseColor = GRAPHICS::Color(0.8f, 0.8f, 0.8f, 1.0f);
+            material->AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+            material->SpecularColor = GRAPHICS::Color(0.0f, 0.0f, 0.0f, 1.0f);
+            material->SpecularPower = 1.0f;
+            material->ReflectivityProportion = 0.5f;
 
-            auto triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            auto triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(-100.0f, -1.0f, -100.0f),
@@ -447,7 +461,7 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             triangle->Material = material;
             scene->Objects.push_back(std::move(triangle));
 
-            triangle = std::make_unique<GRAPHICS::RAY_TRACING::Triangle>();
+            triangle = std::make_unique<GRAPHICS::Triangle>();
             triangle->Vertices =
             {
                 MATH::Vector3f(100.0f, -1.0f, 100.0f),
@@ -458,34 +472,34 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             scene->Objects.push_back(std::move(triangle));
 
             // SPHERE.
-            GRAPHICS::RAY_TRACING::Material sphere_material;
-            sphere_material.DiffuseColor = GRAPHICS::Color(0.6f, 0.6f, 0.6f, 1.0f);
-            sphere_material.AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
-            sphere_material.SpecularColor = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f);
-            sphere_material.SpecularPower = 20.0f;
-            sphere_material.ReflectivityProportion = 0.7f;
+            auto sphere_material = std::make_shared<GRAPHICS::Material>();
+            sphere_material->DiffuseColor = GRAPHICS::Color(0.6f, 0.6f, 0.6f, 1.0f);
+            sphere_material->AmbientColor = GRAPHICS::Color(0.2f, 0.2f, 0.2f, 1.0f);
+            sphere_material->SpecularColor = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f);
+            sphere_material->SpecularPower = 20.0f;
+            sphere_material->ReflectivityProportion = 0.7f;
 
             auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
             sphere->CenterPosition = MATH::Vector3f(1.2f, 0.0f, -5.0f);
             sphere->Radius = 1.0f;
-            sphere_material.AmbientColor = GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f);
-            sphere_material.DiffuseColor = sphere_material.AmbientColor;
+            sphere_material->AmbientColor = GRAPHICS::Color(1.0f, 0.0f, 0.0f, 1.0f);
+            sphere_material->DiffuseColor = sphere_material->AmbientColor;
             sphere->Material = sphere_material;
             scene->Objects.push_back(std::move(sphere));
 
             sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
             sphere->CenterPosition = MATH::Vector3f(0.0f, 0.3f, -1.5f);
             sphere->Radius = 0.2f;
-            sphere_material.AmbientColor = GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f);
-            sphere_material.DiffuseColor = sphere_material.AmbientColor;
+            sphere_material->AmbientColor = GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f);
+            sphere_material->DiffuseColor = sphere_material->AmbientColor;
             sphere->Material = sphere_material;
             scene->Objects.push_back(std::move(sphere));
 
             sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
             sphere->CenterPosition = MATH::Vector3f(-1.0f, -0.5f, -3.0f);
             sphere->Radius = 0.5f;
-            sphere_material.AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f);
-            sphere_material.DiffuseColor = sphere_material.AmbientColor;
+            sphere_material->AmbientColor = GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f);
+            sphere_material->DiffuseColor = sphere_material->AmbientColor;
             sphere->Material = sphere_material;
             scene->Objects.push_back(std::move(sphere));
 
@@ -494,18 +508,20 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
         case 5:
         {
             auto scene = std::make_unique<GRAPHICS::RAY_TRACING::Scene>();
-            scene->PointLights.push_back(GRAPHICS::RAY_TRACING::PointLight(
-                MATH::Vector3f(-5.0f, 2.0f, 5.0f),
-                GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f)));
+            scene->PointLights.push_back(GRAPHICS::Light
+            {
+                .Color = GRAPHICS::Color(1.0f, 1.0f, 1.0f, 1.0f),
+                .PointLightWorldPosition = MATH::Vector3f(-5.0f, 2.0f, 5.0f),
+            });
             scene->BackgroundColor = GRAPHICS::Color::BLACK;
 
             // SPHERE 1.
-            GRAPHICS::RAY_TRACING::Material sphere_material;
-            sphere_material.DiffuseColor = GRAPHICS::Color(0.5f, 0.0f, 0.5f, 1.0f);
-            sphere_material.AmbientColor = GRAPHICS::Color(0.2f, 0.0f, 0.2f, 1.0f);
-            sphere_material.SpecularColor = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f);
-            sphere_material.SpecularPower = 20.0f;
-            sphere_material.ReflectivityProportion = 0.8f;
+            auto sphere_material = std::make_shared<GRAPHICS::Material>();
+            sphere_material->DiffuseColor = GRAPHICS::Color(0.5f, 0.0f, 0.5f, 1.0f);
+            sphere_material->AmbientColor = GRAPHICS::Color(0.2f, 0.0f, 0.2f, 1.0f);
+            sphere_material->SpecularColor = GRAPHICS::Color(0.7f, 0.7f, 0.7f, 1.0f);
+            sphere_material->SpecularPower = 20.0f;
+            sphere_material->ReflectivityProportion = 0.8f;
 
             auto sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
             sphere->CenterPosition = MATH::Vector3f(0.0f, 0.0f, -4.0f);
@@ -514,11 +530,12 @@ std::unique_ptr<GRAPHICS::RAY_TRACING::Scene> CreateScene(const unsigned int sce
             scene->Objects.push_back(std::move(sphere));
 
             // SPHERE 2.
-            sphere_material.DiffuseColor = GRAPHICS::Color(0.0f, 0.5f, 0.0f, 1.0f);
-            sphere_material.AmbientColor = GRAPHICS::Color(0.0f, 0.2f, 0.0f, 1.0f);
-            sphere_material.SpecularColor = GRAPHICS::Color(0.0f, 0.2f, 0.0f, 1.0f);
-            sphere_material.SpecularPower = 1.0f;
-            sphere_material.ReflectivityProportion = 0.0f;
+            sphere_material = std::make_shared<GRAPHICS::Material>();
+            sphere_material->DiffuseColor = GRAPHICS::Color(0.0f, 0.5f, 0.0f, 1.0f);
+            sphere_material->AmbientColor = GRAPHICS::Color(0.0f, 0.2f, 0.0f, 1.0f);
+            sphere_material->SpecularColor = GRAPHICS::Color(0.0f, 0.2f, 0.0f, 1.0f);
+            sphere_material->SpecularPower = 1.0f;
+            sphere_material->ReflectivityProportion = 0.0f;
 
             sphere = std::make_unique<GRAPHICS::RAY_TRACING::Sphere>();
             sphere->CenterPosition = MATH::Vector3f(1.0f, 0.6f, -3.0f);
@@ -844,12 +861,12 @@ LRESULT CALLBACK MainWindowCallback(
                     // SWITCH TO THE NEXT MATERIAL FOR ALL OBJECTS.
                     ++g_current_material_index;
                     g_current_material_index = g_current_material_index % static_cast<std::size_t>(GRAPHICS::ShadingType::COUNT);
-                    const GRAPHICS::Material& current_material = g_materials_by_shading_type.at(g_current_material_index);
+                    const std::shared_ptr<GRAPHICS::Material>& current_material = g_materials_by_shading_type.at(g_current_material_index);
                     for (auto& object_3D : g_objects)
                     {
                         for (auto& triangle : object_3D.Triangles)
                         {
-                            triangle.Material = &current_material;
+                            triangle.Material = current_material;
                         }
                     }
                     break;
@@ -1039,12 +1056,12 @@ int CALLBACK WinMain(
     // and initialization order isn't clearly defined.
     g_materials_by_shading_type =
     {
-        GRAPHICS::Material
+        std::make_shared<GRAPHICS::Material>(GRAPHICS::Material
         {
             .Shading = GRAPHICS::ShadingType::WIREFRAME,
             .WireframeColor = GRAPHICS::Color::GREEN
-        },
-        GRAPHICS::Material
+        }),
+        std::make_shared<GRAPHICS::Material>(GRAPHICS::Material
         {
             .Shading = GRAPHICS::ShadingType::WIREFRAME_VERTEX_COLOR_INTERPOLATION,
             .VertexWireframeColors =
@@ -1053,13 +1070,13 @@ int CALLBACK WinMain(
                 GRAPHICS::Color::GREEN,
                 GRAPHICS::Color::BLUE,
             }
-        },
-        GRAPHICS::Material
+        }),
+        std::make_shared<GRAPHICS::Material>(GRAPHICS::Material
         {
             .Shading = GRAPHICS::ShadingType::FLAT,
             .FaceColor = GRAPHICS::Color::BLUE
-        },
-        GRAPHICS::Material
+        }),
+        std::make_shared<GRAPHICS::Material>(GRAPHICS::Material
         {
             .Shading = GRAPHICS::ShadingType::FACE_VERTEX_COLOR_INTERPOLATION,
             .VertexFaceColors =
@@ -1068,8 +1085,8 @@ int CALLBACK WinMain(
                 GRAPHICS::Color(0.0f, 1.0f, 0.0f, 1.0f),
                 GRAPHICS::Color(0.0f, 0.0f, 1.0f, 1.0f),
             }
-        },
-        GRAPHICS::Material
+        }),
+        std::make_shared<GRAPHICS::Material>(GRAPHICS::Material
         {
             .Shading = GRAPHICS::ShadingType::GOURAUD,
             .VertexColors =
@@ -1080,8 +1097,8 @@ int CALLBACK WinMain(
                 GRAPHICS::Color(0.5f, 0.5f, 0.5f, 1.0f),
             },
             .SpecularPower = 20.0f
-        },
-        GRAPHICS::Material
+        }),
+        std::make_shared<GRAPHICS::Material>(GRAPHICS::Material
         {
             .Shading = GRAPHICS::ShadingType::TEXTURED,
             .VertexColors =
@@ -1097,12 +1114,12 @@ int CALLBACK WinMain(
                 MATH::Vector2f(1.0f, 0.0f),
                 MATH::Vector2f(0.0f, 1.0f)
             }
-        }
+        })
     };
 
     // CREATE MANY SMALL TRIANGLES FOR RENDERING.
-    const GRAPHICS::Material& default_material = g_materials_by_shading_type.at(g_current_material_index);
-    GRAPHICS::Triangle triangle = GRAPHICS::Triangle::CreateEquilateral(&default_material);
+    const std::shared_ptr<GRAPHICS::Material>& default_material = g_materials_by_shading_type.at(g_current_material_index);
+    GRAPHICS::Triangle triangle = GRAPHICS::Triangle::CreateEquilateral(default_material);
 
     // Can go up to about 200 triangles with some 30 FPS and some dips.
     // 150 triangles is about the cap in which we mostly get 30 FPS,
@@ -1132,7 +1149,7 @@ int CALLBACK WinMain(
     g_objects.push_back(larger_triangle);
 
     // CREATE A CUBE.
-    GRAPHICS::Object3D cube = GRAPHICS::Cube::Create(&default_material);
+    GRAPHICS::Object3D cube = GRAPHICS::Cube::Create(default_material);
     cube.Scale = MATH::Vector3f(10.0f, 10.0f, 10.0f);
     cube.WorldPosition = MATH::Vector3f(0.0f, 0.0f, 0.0f);
     g_objects.push_back(cube);
@@ -1142,10 +1159,12 @@ int CALLBACK WinMain(
     if (cube_from_file)
     {
         /// @todo   Need to support proper material loading.
+#if 0
         for (auto& loaded_triangle : cube_from_file->Triangles)
         {
-            loaded_triangle.Material = &default_material;
+            loaded_triangle.Material = default_material;
         }
+#endif
         g_objects.push_back(*cube_from_file);
     }
 

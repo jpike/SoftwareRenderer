@@ -4,6 +4,7 @@
 #include <vector>
 #include "Graphics/Color.h"
 #include "Graphics/Texture.h"
+#include "Math/Vector2.h"
 
 namespace GRAPHICS
 {
@@ -24,6 +25,9 @@ namespace GRAPHICS
         /// Shading that incorporates a texture.
         /// @todo   Should this be incorporated into something else?
         TEXTURED,
+        /// Using material colors rather than vertex colors.
+        /// @todo   How to handle differences here?
+        MATERIAL,
         /// An extra enum to indicate the number of different shading types.
         COUNT
     };
@@ -57,8 +61,18 @@ namespace GRAPHICS
         /// @todo   Consolidate these vertex colors with other vertex colors?
         std::vector<Color> VertexColors = {};
 
+        /// The ambient color of the material.
+        Color AmbientColor = Color::BLACK;
+        /// The diffuse color of the material.
+        Color DiffuseColor = Color::BLACK;
+        /// The specular color of the material.
+        Color SpecularColor = Color::BLACK;
         /// The specular power defining the shininess of specular highlights.
         float SpecularPower = 0.0f;
+        /// How reflective the material is as a proportion from [0, 1].
+        float ReflectivityProportion = 0.0f;
+        /// The emissive color if the material emits light.
+        Color EmissiveColor = Color::BLACK;
 
         /// Any texture defining the look of the material.
         std::shared_ptr<Texture> Texture = nullptr;

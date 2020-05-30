@@ -4,7 +4,7 @@
 #include <vector>
 #include "Graphics/Color.h"
 #include "Graphics/RayTracing/IObject3D.h"
-#include "Graphics/RayTracing/PointLight.h"
+#include "Graphics/Light.h"
 
 namespace GRAPHICS
 {
@@ -21,7 +21,7 @@ namespace RAY_TRACING
         /// All objects in the scene.
         std::vector< std::unique_ptr<IObject3D> > Objects = {};
         /// All point lights in the scene.
-        std::vector<PointLight> PointLights = {};
+        std::vector<Light> PointLights = {};
     };
 }
 }
